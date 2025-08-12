@@ -2,12 +2,11 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "Backend for SkillMentoX",
-  "main": "dist/server.ts",
+  "main": "Server.js",
   "type": "module",
   "scripts": {
-    "dev": "ts-node-dev --respawn --esm src/server.ts",
-    "build": "tsc",
-    "start": "node dist/server.ts"
+    "start": "nodemon Server.js",
+    "dev": "nodemon Server.js"
   },
   "keywords": [],
   "author": "Mohammed Faisal",
@@ -33,18 +32,6 @@
     "xss-clean": "^0.1.4"
   },
   "devDependencies": {
-    "@types/bcrypt": "^6.0.0",
-    "@types/bcryptjs": "^2.4.6",
-    "@types/cookie-parser": "^1.4.9",
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.3",
-    "@types/jsonwebtoken": "^9.0.10",
-    "@types/multer": "^2.0.0",
-    "@types/node": "^24.2.1",
-    "@types/nodemailer": "^6.4.17",
-    "nodemon": "^3.1.10",
-    "ts-node": "^10.9.2",
-    "ts-node-dev": "^2.0.0",
-    "typescript": "^5.9.2"
+    "nodemon": "^3.1.10"
   }
 }
