@@ -14,13 +14,13 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const generateToken = (user) => {
   return jwt.sign(
-    { id: User._id, email: user.email, role: user.role, provider: user.provider },
+    { id: user._id, email: user.email, role: user.role, provider: user.provider },
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
   );
 };
 
-// REGISTER (email/password)
+
 export const register = async (req, res) => {
   try {
     const { error } = registerSchema.validate(req.body);
@@ -31,27 +31,29 @@ export const register = async (req, res) => {
     const existing = await User.findOne({ email });
     if (existing) return res.status(409).json({ message: "User already exists" });
 
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
     const user = new User({
       firstName,
       lastName,
       email,
       password,
-      provider: "email"
+      provider: "email",
+      isVerified: false,
+      otpCode: crypto.createHash("sha256").update(otp).digest("hex"),
+      otpExpires: Date.now() + 10 * 60 * 1000
     });
     await user.save();
 
-    // Send welcome email (role missing atm)
     await sendEmail({
       to: user.email,
-      subject: "Welcome to Your App",
-      html:` <p> Welcome ${user.firstName}! Please select your role in the app.</p>`
+      subject: "Verify Your Email - OTP",
+      html: `<p>Your OTP code is: <b>${otp}</b>. It expires in 10 minutes.</p>`
     });
 
-    // Return minimal info; frontend should open role selection modal
     res.status(201).json({
-      message: "User created, please select role",
-      user: { id: user._id, email: user.email, firstName: user.firstName },
-      token: generateToken(user)
+      message: "OTP sent to your email. Please verify.",
+      userId: user._id
     });
   } catch (err) {
     console.error(err);
@@ -59,7 +61,70 @@ export const register = async (req, res) => {
   }
 };
 
-// LOGIN (email/password)
+
+
+export const verifyOtp = async (req, res) => {
+  try {
+    const { userId, otp } = req.body;
+    if (!otp) return res.status(400).json({ message: "OTP is required" });
+
+    const hashedOtp = crypto.createHash("sha256").update(otp).digest("hex");
+
+    const user = await User.findOne({
+      _id: userId,
+      otpCode: hashedOtp,
+      otpExpires: { $gt: Date.now() }
+    });
+
+    if (!user) return res.status(400).json({ message: "Invalid or expired OTP" });
+
+    user.isVerified = true;
+    user.otpCode = undefined;
+    user.otpExpires = undefined;
+    await user.save();
+
+    res.json({ message: "OTP verified successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+
+
+export const setRole = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { role } = req.body;
+
+    if (!["mentor", "student"].includes(role)) {
+      return res.status(400).json({ message: "Invalid role" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user.isVerified) return res.status(403).json({ message: "Please verify your email first" });
+
+    user.role = role;
+    await user.save();
+
+    await sendEmail({
+      to: user.email,
+      subject: "Welcome to Your App 🎉",
+      html: `<p>Hi ${user.firstName},</p>
+             <p>Welcome! You are now registered as a <b>${role}</b>.</p>`
+    });
+
+    res.json({ message: "Role set and welcome email sent", user: { id: user._id, role: user.role } });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+
 export const login = async (req, res) => {
   try {
     const { error } = loginSchema.validate(req.body);
@@ -84,7 +149,8 @@ export const login = async (req, res) => {
   }
 };
 
-// GOOGLE LOGIN
+
+
 export const googleLogin = async (req, res) => {
   try {
     const { idToken } = req.body;
@@ -107,11 +173,9 @@ export const googleLogin = async (req, res) => {
         lastName,
         email,
         provider: "google"
-        // no password
       });
       await user.save();
 
-      // send welcome email
       await sendEmail({
         to: user.email,
         subject: "Welcome to Your App",
@@ -126,7 +190,6 @@ export const googleLogin = async (req, res) => {
       });
     }
 
-    // existing user -> login
     const token = generateToken(user);
     res.json({
       message: "Google login success",
@@ -139,29 +202,8 @@ export const googleLogin = async (req, res) => {
   }
 };
 
-// SET ROLE endpoint
-export const setRole = async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const { role } = req.body;
-    if (!["mentor", "student"].includes(role)) {
-      return res.status(400).json({ message: "Invalid role" });
-    }
 
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: "User not found" });
 
-    user.role = role;
-    await user.save();
-
-    res.json({ message: "Role set", user: { id: user._id, role: user.role } });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
-  }
-};
-
-// FORGOT PASSWORD
 export const forgotPassword = async (req, res) => {
   try {
     const { error } = forgotPasswordSchema.validate(req.body);
@@ -171,13 +213,12 @@ export const forgotPassword = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(200).json({ message: "If that email exists, a reset link was sent." });
 
-    // create reset token
     const resetToken = crypto.randomBytes(32).toString("hex");
     user.resetPasswordToken = crypto.createHash("sha256").update(resetToken).digest("hex");
     user.resetPasswordExpire = Date.now() + 1000 * 60 * 60; // 1 hour
     await user.save();
 
-    const resetUrl = $`{process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
     const html = `
       <p>You requested a password reset</p>
       <p>Click here to reset your password: <a href="${resetUrl}">${resetUrl}</a></p>
@@ -188,7 +229,6 @@ export const forgotPassword = async (req, res) => {
       await sendEmail({ to: user.email, subject: "Password Reset", html });
       res.json({ message: "Reset link sent to email" });
     } catch (emailErr) {
-      // Clean up token if email fails
       user.resetPasswordToken = undefined;
       user.resetPasswordExpire = undefined;
       await user.save();
@@ -201,7 +241,7 @@ export const forgotPassword = async (req, res) => {
   }
 };
 
-// RESET PASSWORD
+
 export const resetPassword = async (req, res) => {
   try {
     const { token } = req.params;
@@ -222,7 +262,6 @@ export const resetPassword = async (req, res) => {
     user.resetPasswordExpire = undefined;
     await user.save();
 
-    // Optionally notify success via email
     await sendEmail({
       to: user.email,
       subject: "Password Reset Successful",
@@ -236,4 +275,3 @@ export const resetPassword = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-

@@ -12,7 +12,6 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Email template for SkillMentorX - Clean Minimalist Style
 const createEmailTemplate = (content, title = "SkillMentorX") => {
   return `
     <!DOCTYPE html>
@@ -375,10 +374,11 @@ export const sendEmail = async ({ to, subject, html }) => {
   const styledHtml = createEmailTemplate(html, subject);
 
   const info = await transporter.sendMail({
-    from: "SkillMentorX" <$`{process.env.EMAIL_USER}`>
+    from: `SkillMentorX <${process.env.EMAIL_USER}>`,
     to,
-    subject: [SkillMentorX] `${subject}`,
+    subject: `[SkillMentorX] ${subject}`,
     html: styledHtml,
   });
+  
   return info;
 };
