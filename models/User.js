@@ -4,13 +4,22 @@ import bcrypt from "bcryptjs";
 const userSchema = new mongoose.Schema({
   firstName: { type: String, required: true, trim: true },
   lastName: { type: String, required: true, trim: true },
-  email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-  password: { type: String }, // optional for OAuth users
-  role: { type: String, enum: ["mentor", "student"], default: null },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    lowercase: true,
+    trim: true,
+  },
+  password: { type: String },
+  role: { type: String, enum: ["mentor", "student" , "admin"], default: null },
   provider: { type: String, enum: ["email", "google"], default: "email" },
   resetPasswordToken: String,
   resetPasswordExpire: Date,
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
+  otpCode: String,
+  otpExpires: Date,
+  isVerified: { type: Boolean, default: false },
 });
 
 // Hash password before save if modified
