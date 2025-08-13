@@ -20,4 +20,4 @@ app.get("/",(req,res)=>{
 })
 
 const PORT = process.env.PORT ;
-app.listen(PORT, ()=> console.log(`Server is running port is ${PORT}` ))
+app.listen(PORT, ()=> console.log(`Server is running port is http://localhost:${PORT}` ))
