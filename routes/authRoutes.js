@@ -5,22 +5,18 @@ import {
   googleLogin,
   setRole,
   forgotPassword,
-  resetPassword
+  resetPassword,
+  verifyOtp
 } from "../controllers/authController.js";
 
 const router = express.Router();
 
-// Register & Login
 router.post("/register", register);
+router.post("/verify-otp", verifyOtp);
+router.put("/set-role/:userId", setRole);
 router.post("/login", login);
-
-// Google
 router.post("/google", googleLogin);
 
-// Role (frontend should call this after showing role modal to user)
-router.put("/set-role/:userId", setRole);
-
-// Forgot / Reset
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password/:token", resetPassword);
 
