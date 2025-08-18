@@ -15,6 +15,10 @@ export const registerSchema = Joi.object({
   password: Joi.string().min(6).max(128).required().messages({
     "string.min": "Password must be at least 6 characters",
     "string.empty": "Password is required"
+  }),
+  role: Joi.string().valid("mentor", "student").required().messages({
+    "string.empty": "Role is required",
+    "any.only": "Role must be either 'mentor' or 'student'"
   })
 });
 
