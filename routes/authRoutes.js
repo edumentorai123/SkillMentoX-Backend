@@ -3,17 +3,18 @@ import {
   register,
   login,
   googleLogin,
-  setRole,
   forgotPassword,
   resetPassword,
-  verifyOtp
+  verifyOtp,
+  resendOtp
 } from "../controllers/authController.js";
 
 const router = express.Router();
 
 router.post("/register", register);
 router.post("/verify-otp", verifyOtp);
-router.put("/set-role/:userId", setRole);
+router.post('/resend-otp', resendOtp)
+
 router.post("/login", login);
 router.post("/google", googleLogin);
 
