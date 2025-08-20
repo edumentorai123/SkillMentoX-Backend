@@ -63,7 +63,7 @@ export const register = async (req, res) => {
       to: email,
       subject: "Verify Your Email - OTP",
       html: `<p>Your OTP code is: <b>${otp}</b>. It expires in 10 minutes.</p>
-             <p>You are registering as a <b>${role}</b>.</p>`,
+              <p>You are registering as a <b>${role}</b>.</p>`,
     });
 
     res.status(201).json({
@@ -113,10 +113,10 @@ export const verifyOtp = async (req, res) => {
     // Send welcome email
     await sendEmail({
       to: user.email,
-      subject: "Welcome to LearnHub 🎉",
+      subject: "Welcome to SkillMentroX 🎉",
       html: `<p>Hi ${user.firstName},</p>
-             <p>Welcome to LearnHub! You are now registered as a <b>${user.role}</b>.</p>
-             <p>Get started by logging in and exploring our platform.</p>`,
+              <p>Welcome to SkillMentroX! You are now registered as a <b>${user.role}</b>.</p>
+              <p>Get started by logging in and exploring our platform.</p>`,
     });
 
     // Generate JWT token for immediate login
@@ -129,6 +129,7 @@ export const verifyOtp = async (req, res) => {
         id: user._id,
         email: user.email,
         firstName: user.firstName,
+        lastName: user.lastName,
         role: user.role,
       },
     });
@@ -208,6 +209,7 @@ export const login = async (req, res) => {
         id: user._id,
         email: user.email,
         firstName: user.firstName,
+        lastName: user.lastName,
         role: user.role,
       },
     });
@@ -253,6 +255,7 @@ export const googleLogin = async (req, res) => {
         id: user._id,
         email: user.email,
         firstName: user.firstName,
+        lastName: user.lastName,
         role: user.role,
       },
     });
