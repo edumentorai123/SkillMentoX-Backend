@@ -8,7 +8,7 @@ import {
   forgotPasswordSchema,
   resetPasswordSchema,
 } from "../validation/authValidation.js";
-import User from "../models/user.js";
+import User from "../models/User.js";
 import TempUser from "../models/tempUser.js";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -119,7 +119,6 @@ export const verifyOtp = async (req, res) => {
              <p>Get started by logging in and exploring our platform.</p>`,
     });
 
-    // Generate JWT token for immediate login
     const token = generateToken(user);
 
     res.json({
@@ -147,13 +146,12 @@ export const resendOtp = async (req, res) => {
         .json({ message: "User ID and email are required" });
     }
 
-    // Find temporary user
+
     const tempUser = await TempUser.findOne({ _id: userId, email });
     if (!tempUser) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Check if user already exists in permanent User collection
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res
@@ -208,57 +206,13 @@ export const login = async (req, res) => {
         id: user._id,
         email: user.email,
         firstName: user.firstName,
+        lastName: user.lastName,
         role: user.role,
       },
     });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
-  }
-};
-
-export const googleLogin = async (req, res) => {
-  try {
-    const { idToken } = req.body;
-    if (!idToken) return res.status(400).json({ message: "Missing id token" });
-
-    // Verify Google ID token
-    const ticket = await client.verifyIdToken({
-      idToken,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
-    const payload = ticket.getPayload();
-    const email = payload.email;
-
-    // Check if user exists in database
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res
-        .status(401)
-        .json({ message: "User not registered. Please register first." });
-    }
-
-    // Optional: Update provider to include Google
-    if (user.provider !== "google") {
-      user.provider = "google"; // Update provider if user was registered via email
-      await user.save();
-    }
-
-    // Generate JWT token
-    const token = generateToken(user);
-    res.json({
-      message: "Google login success",
-      token,
-      user: {
-        id: user._id,
-        email: user.email,
-        firstName: user.firstName,
-        role: user.role,
-      },
-    });
-  } catch (err) {
-    console.error("Google login error:", err);
-    res.status(500).json({ message: "Google auth failed" });
   }
 };
 
