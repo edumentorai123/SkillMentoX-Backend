@@ -8,7 +8,7 @@ import {
   forgotPasswordSchema,
   resetPasswordSchema,
 } from "../validation/authValidation.js";
-import User from "../models/user.js";
+import User from "../models/User.js";
 import TempUser from "../models/tempUser.js";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
