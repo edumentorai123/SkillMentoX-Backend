@@ -22,7 +22,6 @@ const userSchema = new mongoose.Schema({
   isVerified: { type: Boolean, default: false },
 });
 
-// Hash password before save if modified
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
   const salt = await bcrypt.genSalt(10);
@@ -30,7 +29,7 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
-// helper to compare password
+
 userSchema.methods.matchPassword = async function (enteredPassword) {
   if (!this.password) return false;
   return await bcrypt.compare(enteredPassword, this.password);
