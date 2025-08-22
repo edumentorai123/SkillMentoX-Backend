@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import authRoutes from "./routes/authRoutes.js";
 import connectDB from "./config/db.js";
+import StudentRoutes from "./routes/StudentRoutes.js";
 
 dotenv.config();
 const app = express();
@@ -16,9 +17,13 @@ app.use(
   })
 );
 
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ limit: "10mb", extended: true })); 
+
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
+app.use("/api/students",StudentRoutes)
 
 
 const PORT = process.env.PORT || 9999;
