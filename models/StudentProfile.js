@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-
 const StudentProfile = new mongoose.Schema(
   {
     name: {
@@ -44,27 +43,18 @@ const StudentProfile = new mongoose.Schema(
         "Self-Taught",
       ],
     },
-    selectedCourse: {
+
+    selectedCategory: {
       type: String,
       required: true,
-      enum: [
-        "Web Development",
-        "Data Science",
-        "Mobile App Development",
-        "UI/UX Design",
-        "Digital Marketing",
-        "Machine Learning",
-        "Cybersecurity",
-        "Cloud Computing",
-        "DevOps",
-        "Blockchain Development",
-      ],
+      trim: true, 
     },
+
     selectedStack: {
       type: String,
       required: true,
+      trim: true, 
     },
-
   },
   { timestamps: true }
 );

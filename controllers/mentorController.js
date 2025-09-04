@@ -1,9 +1,10 @@
+// backend/controllers/mentorController.js
 import Mentor from "../models/mentor.js";
+import MentorRequest from "../models/MentorRequest.js";
 import { courseCategories } from "../data/courseCategories.js";
 import { uploadBufferToCloudinary } from "../utils/cloudinaryUpload.js";
 import { mentorProfileSchema } from "../validation/mentorValidation.js";
 
-// Existing functions (unchanged)
 const isValidCourse = (category, courseName) => {
   if (!courseCategories[category]) return false;
   const availableCourses =
@@ -34,6 +35,118 @@ const uploadMany = async (filesArray, folder) => {
   return urls;
 };
 
+export const createMentorRequest = async (req, res) => {
+  try {
+    const { message, priority, type } = req.body; // Added priority and type
+    const existing = await MentorRequest.findOne({
+      user: req.user._id,
+      status: "pending",
+    });
+    if (existing) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "You already have a pending request",
+        });
+    }
+
+    const request = await MentorRequest.create({
+      user: req.user._id,
+      reason: message || "Requesting mentor access",
+      status: "pending",
+      priority: priority || "Medium",
+      type: type || "Mentor Application",
+    });
+
+    // Create a default mentor profile
+    await Mentor.create({
+      userId: req.user._id,
+      fullName: req.user.name || "",
+      email: req.user.email || "",
+      documents: {
+        idProof: [],
+        qualificationProof: [],
+        cv: [],
+      },
+    });
+
+    res.status(201).json({ success: true, data: request });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getMentorRequests = async (req, res) => {
+  try {
+    const requests = await MentorRequest.find()
+      .populate("user", "name email role")
+      .populate("reviewedBy", "name");
+    res.status(200).json({ success: true, data: requests });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const approveMentorRequest = async (req, res) => {
+  try {
+    const request = await MentorRequest.findById(req.params.id).populate(
+      "user"
+    );
+
+    if (!request) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Request not found" });
+    }
+
+    request.status = "approved";
+    request.reviewedBy = req.user._id; // Set reviewedBy to current admin
+    request.reviewedAt = new Date();
+    await request.save();
+
+    request.user.role = "mentor";
+    await request.user.save();
+
+    res
+      .status(200)
+      .json({
+        success: true,
+        message: "Mentor request approved",
+        data: request,
+      });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const rejectMentorRequest = async (req, res) => {
+  try {
+    const request = await MentorRequest.findById(req.params.id);
+
+    if (!request) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Request not found" });
+    }
+
+    request.status = "rejected";
+    request.reviewedBy = req.user._id; // Set reviewedBy to current admin
+    request.reviewedAt = new Date();
+    await request.save();
+
+    res
+      .status(200)
+      .json({
+        success: true,
+        message: "Mentor request rejected",
+        data: request,
+      });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 export const createOrUpdateMentorProfile = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -57,7 +170,6 @@ export const createOrUpdateMentorProfile = async (req, res) => {
     const certifications = parseJSON(req.body.certifications, []);
     const courses = parseJSON(req.body.courses, []);
 
-    // Joi validation (form fields only; documents are handled separately)
     const { error } = mentorProfileSchema.validate(
       {
         fullName,
@@ -144,7 +256,7 @@ export const createOrUpdateMentorProfile = async (req, res) => {
       setObj.yearsOfExperience = Number(yearsOfExperience) || 0;
     }
     if (newProfileUrl) {
-      setObj.profilePicture = newProfileUrl; // overwrite
+      setObj.profilePicture = newProfileUrl;
     }
 
     let updated;
@@ -152,7 +264,6 @@ export const createOrUpdateMentorProfile = async (req, res) => {
     if (existing) {
       const updateOps = { $set: setObj };
 
-      // Prepare $push with $each only for fields that have new files
       const pushOps = {};
       if (newIdProofUrls.length) {
         pushOps["documents.idProof"] = { $each: newIdProofUrls };
@@ -170,7 +281,6 @@ export const createOrUpdateMentorProfile = async (req, res) => {
         updateOps.$push = pushOps;
       }
 
-      // Ensure documents object exists if missing
       if (!existing.documents) {
         updateOps.$set["documents"] = {
           idProof: [],
@@ -189,7 +299,6 @@ export const createOrUpdateMentorProfile = async (req, res) => {
         data: updated,
       });
     } else {
-      // New mentor: create with documents arrays initialized
       const toCreate = {
         userId,
         ...setObj,
@@ -216,23 +325,21 @@ export const createOrUpdateMentorProfile = async (req, res) => {
 
 export const getMentorProfile = async (req, res) => {
   try {
-    const mentor = await Mentor.findOne({ userId: req.user.id });
-    if (!mentor) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Profile not found" });
+    const mentorId = req.user.id;
+    const profile = await Mentors.findOne({ userId: mentorId });
+    if (!profile) {
+      return res.status(404).json({ success: false, message: "Profile not found" });
     }
-    res.json({ success: true, data: mentor });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    res.json({ success: true, data: profile });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
-
 
 export const deleteMentorDocument = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { docType, url } = req.body; // docType = "idProof" | "qualificationProof" | "cv"
+    const { docType, url } = req.body;
 
     if (!docType || !url) {
       return res.status(400).json({
@@ -243,7 +350,7 @@ export const deleteMentorDocument = async (req, res) => {
 
     const mentor = await Mentor.findOneAndUpdate(
       { userId },
-      { $pull: { [`documents.${docType}`]: url } }, // remove from array
+      { $pull: { [`documents.${docType}`]: url } },
       { new: true }
     );
 
