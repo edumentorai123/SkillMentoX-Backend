@@ -1,4 +1,3 @@
-// backend/routes/mentorRoutes.js
 import express from "express";
 import {
   createMentorRequest,
@@ -26,9 +25,10 @@ router.post(
   protect,
   authorize("mentor"),
   upload.fields([
-    { name: "idProof", maxCount: 1 },
-    { name: "qualificationProof", maxCount: 1 },
-    { name: "cv", maxCount: 1 },
+    { name: "profilePicture", maxCount: 1 }, // single
+    { name: "idProof", maxCount: 10 }, // multiple
+    { name: "qualificationProof", maxCount: 10 }, // multiple
+    { name: "cv", maxCount: 10 }, // multiple
   ]),
   createOrUpdateMentorProfile
 );
