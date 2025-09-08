@@ -1,11 +1,11 @@
 
 import Mentor from "../models/mentor.js";
-import MentorRequest from "../models/MentorRequest.js";
 import { courseCategories } from "../data/courseCategories.js";
 import { uploadBufferToCloudinary } from "../utils/cloudinaryUpload.js";
 import { mentorProfileSchema } from "../validation/mentorValidation.js";
 
-// Updated isValidCourse
+
+
 const isValidCourse = (category, courseName) => {
   if (!courseCategories[category]) return false;
   const availableCourses =
@@ -47,7 +47,7 @@ export const createOrUpdateMentorProfile = async (req, res) => {
     const certifications = parseJSON(req.body.certifications, []);
     const courses = parseJSON(req.body.courses, []);
 
-    // ✅ Joi validation
+
     const { error } = mentorProfileSchema.validate(
       {
         fullName,
@@ -178,6 +178,25 @@ export const getMentorProfile = async (req, res) => {
         .status(404)
         .json({ success: false, message: "Profile not found" });
     res.json({ success: true, data: mentor });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+
+export const approveMentorRequest = async (req, res) => {
+  try {
+    const { requestId } = req.params;
+    const mentor = await Mentor.findByIdAndUpdate(
+      requestId,
+      { status: "approved" },
+      { new: true }
+    );
+    if (!mentor) {
+      return res.status(404).json({ success: false, message: "Mentor request not found" });
+    }
+    res.json({ success: true, message: "Mentor request approved", data: mentor });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: err.message });
