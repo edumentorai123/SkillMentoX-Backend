@@ -19,6 +19,7 @@ router.get("/courseCategories", (req, res) => {
   res.json({ success: true, data: courseCategories });
 });
 
+
 // Mentor profile routes
 router.post(
   "/updateProfile",
