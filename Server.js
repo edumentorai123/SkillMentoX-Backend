@@ -15,7 +15,7 @@ app.use(
   cors({
     origin: process.env.FRONTEND_URL,
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE","PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
@@ -26,6 +26,7 @@ app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/mentor", mentorRoutes);
+
 app.use("/api/students",StudentRoutes)
 app.use("/api/chat", chatRoutes);
 

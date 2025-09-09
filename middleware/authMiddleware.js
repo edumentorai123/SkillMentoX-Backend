@@ -33,7 +33,7 @@ export const protect = async (req, res, next) => {
   }
 };
 
-// Middleware to check user role
+
 export const authorize = (...allowedRoles) => {
   return (req, res, next) => {
     if (!req.user) {
