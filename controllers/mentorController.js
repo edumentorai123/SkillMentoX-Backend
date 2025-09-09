@@ -57,7 +57,6 @@ export const createOrUpdateMentorProfile = async (req, res) => {
     const certifications = parseJSON(req.body.certifications, []);
     const courses = parseJSON(req.body.courses, []);
 
-    // Joi validation (form fields only; documents are handled separately)
     const { error } = mentorProfileSchema.validate(
       {
         fullName,
@@ -243,7 +242,7 @@ export const deleteMentorDocument = async (req, res) => {
 
     const mentor = await Mentor.findOneAndUpdate(
       { userId },
-      { $pull: { [`documents.${docType}`]: url } }, // remove from array
+      { $pull: { [`documents.${docType}`]: url } }, 
       { new: true }
     );
 

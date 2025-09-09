@@ -216,6 +216,7 @@ export const login = async (req, res) => {
   }
 };
 
+
 export const forgotPassword = async (req, res) => {
   try {
     const { error } = forgotPasswordSchema.validate(req.body);
