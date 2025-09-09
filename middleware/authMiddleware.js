@@ -33,7 +33,7 @@ import User from "../models/User.js";
   }
 };
 
-// Middleware to check user role
+
 export const authorize = (...allowedRoles) => {
   return (req, res, next) => {
     if (!req.user) {
