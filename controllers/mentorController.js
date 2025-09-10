@@ -1,9 +1,7 @@
-
 import Mentor from "../models/mentor.js";
 import { courseCategories } from "../data/courseCategories.js";
 import { uploadBufferToCloudinary } from "../utils/cloudinaryUpload.js";
 import { mentorProfileSchema } from "../validation/mentorValidation.js";
-
 
 
 const isValidCourse = (category, courseName) => {
@@ -77,7 +75,7 @@ export const createOrUpdateMentorProfile = async (req, res) => {
       });
     }
 
-    // ✅ validate courses manually also
+   
     if (Array.isArray(courses) && courses.length) {
       for (const c of courses) {
         if (!c?.category || !c?.courseName) {
@@ -164,13 +162,13 @@ export const createOrUpdateMentorProfile = async (req, res) => {
         .status(201)
         .json({ success: true, message: "Profile created", data: newMentor });
     }
-  } catch (err) {
+   }catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: err.message });
   }
 };
 
-export const getMentorProfile = async (req, res) => {
+export const getMentorProfiles= async (req, res) => {
   try {
     const mentor = await Mentor.findOne({ userId: req.user.id });
     if (!mentor)
@@ -183,6 +181,10 @@ export const getMentorProfile = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
+
+
+
 
 
 export const approveMentorRequest = async (req, res) => {
