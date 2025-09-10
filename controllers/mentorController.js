@@ -6,7 +6,6 @@ import { mentorProfileSchema } from "../validation/mentorValidation.js";
 
 import mongoose from "mongoose";
 
-
 const isValidCourse = (category, courseName) => {
   if (!courseCategories[category]) return false;
   const availableCourses =
@@ -77,8 +76,6 @@ export const createOrUpdateMentorProfile = async (req, res) => {
         message: error.details.map((d) => d.message).join(", "),
       });
     }
-
-    // Validate courses manually
     if (Array.isArray(courses) && courses.length) {
       for (const c of courses) {
         if (!c?.category || !c?.courseName) {
@@ -179,18 +176,13 @@ export const createOrUpdateMentorProfile = async (req, res) => {
         data: newMentor,
       });
     }
-  } catch (err) {
+   }catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: err.message });
   }
 };
 
-
-
-
-
-
-export const getMentorProfile = async (req, res) => {
+export const getMentorProfiles= async (req, res) => {
   try {
     const mentor = await Mentor.findOne({ userId: req.user.id });
     if (!mentor)
@@ -209,7 +201,7 @@ export const getMentorProfile = async (req, res) => {
 
 
 
-export const deleteMentorDocument = async (req, res) => {
+export const approveMentorRequest = async (req, res) => {
   try {
     const userId = req.user.id;
     const { docType, url } = req.body;
@@ -282,3 +274,108 @@ export const getMentorDetails = async (req, res) => {
     res.status(500).json({ message: "Server Error", error });
   }
 };
+
+export const createMentorRequest = async (req, res) => {
+  try {
+   
+    const mentor = await Mentor.create({ userId: req.user.id, status: "pending" });
+
+    res.status(201).json({
+      success: true,
+      message: "Mentor request created successfully",
+      data: mentor,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+
+export const deleteMentorDocument = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { docType } = req.body; 
+
+    if (!docType) {
+      return res.status(400).json({
+        success: false,
+        message: "Document type is required",
+      });
+    }
+
+    let mentor = await Mentor.findOne({ userId });
+    if (!mentor) {
+      return res.status(404).json({
+        success: false,
+        message: "Mentor profile not found",
+      });
+    }
+
+    if (mentor.documents && mentor.documents[docType]) {
+      delete mentor.documents[docType];
+      await mentor.save();
+      return res.json({
+        success: true,
+        message: `${docType} deleted successfully`,
+        data: mentor,
+      });
+    } else {
+      return res.status(404).json({
+        success: false,
+        message: `${docType} not found`,
+      });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+
+export const getMentorRequests = async (req, res) => {
+  try {
+   
+    const mentors = await Mentor.find({ status: { $in: ["pending", "approved", "rejected"] } })
+      .populate("userId", "name email");
+
+    res.json({
+      success: true,
+      data: mentors,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+
+
+export const rejectMentorRequest = async (req, res) => {
+  try {
+    const { requestId } = req.params;
+    const { reason } = req.body; 
+
+    const mentor = await Mentor.findByIdAndUpdate(
+      requestId,
+      { status: "rejected", rejectionReason: reason || "No reason provided" },
+      { new: true }
+    );
+
+    if (!mentor) {
+      return res.status(404).json({
+        success: false,
+        message: "Mentor request not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Mentor request rejected",
+      data: mentor,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+}

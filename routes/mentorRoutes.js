@@ -2,17 +2,20 @@ import express from "express";
 import {
   createOrUpdateMentorProfile,
   deleteMentorDocument,
-  getMentorProfile,
+
   getMentorRequests,
-  getMentorDetails
+  approveMentorRequest,
+  rejectMentorRequest,
+  getMentorProfiles,
+
 } from "../controllers/mentorController.js";
 import { protect, authorize } from "../middleware/authMiddleware.js";
 import upload from "../middleware/upload.js";
 import { courseCategories } from "../data/courseCategories.js";
+import Mentor from "../models/mentor.js";
 
 const router = express.Router();
 
-// Course categories
 router.get("/courseCategories", (req, res) => {
   res.json({ success: true, data: courseCategories });
 });
@@ -33,6 +36,7 @@ router.post(
 router.get("/profile", protect, getMentorProfile);
 router.delete("/document", protect, authorize("mentor"), deleteMentorDocument);
 
+
 router.get(
   "/admin/mentor-requests",
   protect,
@@ -45,6 +49,21 @@ router.get(
   protect,
   authorize("admin"),
   getMentorDetails    
+
+router.delete("/document", protect, authorize("mentor"), deleteMentorDocument);
+router.post("/mentor-request", protect, createMentorRequest);
+router.get("/mentor-requests", protect, getMentorRequests);
+router.patch(
+  "/mentor-requests/:id/approve",
+  protect,
+  authorize("admin"),
+  approveMentorRequest
+);
+router.patch(
+  "/mentor-requests/:id/reject",
+  protect,
+  authorize("admin"),
+  rejectMentorRequest
 );
 
 export default router;
