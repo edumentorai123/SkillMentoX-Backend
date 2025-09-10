@@ -1,3 +1,5 @@
+
+
 import mongoose from "mongoose";
 
 const courseSchema = new mongoose.Schema({
@@ -34,7 +36,6 @@ const mentorSchema = new mongoose.Schema(
     linkedin: { type: String, trim: true },
     github: { type: String, trim: true },
     portfolio: { type: String, trim: true },
-
     gender: {
       type: String,
       enum: ["Male", "Female"],
@@ -43,13 +44,14 @@ const mentorSchema = new mongoose.Schema(
     phoneNumber: { type: String, trim: true },
 
     documents: {
-      idProof: [{ type: String, default: [] }],
-      qualificationProof: [{ type: String, default: [] }],
-      cv: [{ type: String, default: [] }],
+      idProof: [{ type: String }],
+      qualificationProof: [{ type: String }], 
+      cv: [{ type: String }], 
+     
     },
     verificationStatus: {
       type: String,
-      enum: ["Pending", "Verified", "Rejected"],
+      enum: ["Pending", "approved", "Rejected"],
       default: "Pending",
     },
   },

@@ -1,9 +1,12 @@
 import Mentor from "../models/mentor.js";
+import MentorRequest from "../models/MentorRequest.js"; // Import MentorRequest
 import { courseCategories } from "../data/courseCategories.js";
 import { uploadBufferToCloudinary } from "../utils/cloudinaryUpload.js";
 import { mentorProfileSchema } from "../validation/mentorValidation.js";
 
-// Existing functions (unchanged)
+import mongoose from "mongoose";
+
+
 const isValidCourse = (category, courseName) => {
   if (!courseCategories[category]) return false;
   const availableCourses =
@@ -20,18 +23,6 @@ const parseJSON = (value, fallback) => {
   } catch {
     return fallback;
   }
-};
-
-const uploadOne = async (file, folder) => {
-  const up = await uploadBufferToCloudinary(file, folder);
-  return up.secure_url;
-};
-
-const uploadMany = async (filesArray, folder) => {
-  if (!filesArray || !Array.isArray(filesArray) || filesArray.length === 0)
-    return [];
-  const urls = await Promise.all(filesArray.map((f) => uploadOne(f, folder)));
-  return urls;
 };
 
 export const createOrUpdateMentorProfile = async (req, res) => {
@@ -56,8 +47,6 @@ export const createOrUpdateMentorProfile = async (req, res) => {
     const education = parseJSON(req.body.education, []);
     const certifications = parseJSON(req.body.certifications, []);
     const courses = parseJSON(req.body.courses, []);
-
-    // Joi validation (form fields only; documents are handled separately)
     const { error } = mentorProfileSchema.validate(
       {
         fullName,
@@ -89,6 +78,7 @@ export const createOrUpdateMentorProfile = async (req, res) => {
       });
     }
 
+    // Validate courses manually
     if (Array.isArray(courses) && courses.length) {
       for (const c of courses) {
         if (!c?.category || !c?.courseName) {
@@ -107,23 +97,33 @@ export const createOrUpdateMentorProfile = async (req, res) => {
       }
     }
 
-    const existing = await Mentor.findOne({ userId });
+    let profilePictureUrl = "";
+    let idProofUrl = "";
+    let qualificationProofUrl = "";
 
-    const newProfileUrl = req.files?.profilePicture?.[0]
-      ? await uploadOne(req.files.profilePicture[0], "mentors/profile")
-      : "";
+    if (req.files?.profilePicture?.[0]) {
+      const up = await uploadBufferToCloudinary(
+        req.files.profilePicture[0],
+        "mentors/profile"
+      );
+      profilePictureUrl = up.secure_url;
+    }
+    if (req.files?.idProof?.[0]) {
+      const up = await uploadBufferToCloudinary(
+        req.files.idProof[0],
+        "mentors/documents"
+      );
+      idProofUrl = up.secure_url;
+    }
+    if (req.files?.qualificationProof?.[0]) {
+      const up = await uploadBufferToCloudinary(
+        req.files.qualificationProof[0],
+        "mentors/documents"
+      );
+      qualificationProofUrl = up.secure_url;
+    }
 
-    const newIdProofUrls = await uploadMany(
-      req.files?.idProof,
-      "mentors/documents"
-    );
-    const newQualificationUrls = await uploadMany(
-      req.files?.qualificationProof,
-      "mentors/documents"
-    );
-    const newCvUrls = await uploadMany(req.files?.cv, "mentors/documents");
-
-    const setObj = {
+    const data = {
       fullName,
       headline,
       bio,
@@ -140,72 +140,43 @@ export const createOrUpdateMentorProfile = async (req, res) => {
       courses,
     };
 
-    if (yearsOfExperience !== undefined) {
-      setObj.yearsOfExperience = Number(yearsOfExperience) || 0;
-    }
-    if (newProfileUrl) {
-      setObj.profilePicture = newProfileUrl; // overwrite
-    }
+    if (yearsOfExperience !== undefined)
+      data.yearsOfExperience = Number(yearsOfExperience) || 0;
+    if (profilePictureUrl) data.profilePicture = profilePictureUrl;
 
-    let updated;
+    data.documents = {};
+    if (idProofUrl) data.documents.idProof = idProofUrl;
+    if (qualificationProofUrl)
+      data.documents.qualificationProof = qualificationProofUrl;
 
-    if (existing) {
-      const updateOps = { $set: setObj };
+    let mentor = await Mentor.findOne({ userId });
 
-      // Prepare $push with $each only for fields that have new files
-      const pushOps = {};
-      if (newIdProofUrls.length) {
-        pushOps["documents.idProof"] = { $each: newIdProofUrls };
-      }
-      if (newQualificationUrls.length) {
-        pushOps["documents.qualificationProof"] = {
-          $each: newQualificationUrls,
-        };
-      }
-      if (newCvUrls.length) {
-        pushOps["documents.cv"] = { $each: newCvUrls };
-      }
+    if (mentor) {
+      // Existing mentor → update profile
+      mentor = await Mentor.findOneAndUpdate(
+        { userId },
+        { $set: data },
+        { new: true }
+      );
 
-      if (Object.keys(pushOps).length) {
-        updateOps.$push = pushOps;
-      }
-
-      // Ensure documents object exists if missing
-      if (!existing.documents) {
-        updateOps.$set["documents"] = {
-          idProof: [],
-          qualificationProof: [],
-          cv: [],
-        };
-      }
-
-      updated = await Mentor.findOneAndUpdate({ userId }, updateOps, {
-        new: true,
-      });
-
-      return res.status(200).json({
-        success: true,
-        message: "Profile updated",
-        data: updated,
-      });
+      return res
+        .status(200)
+        .json({ success: true, message: "Profile updated", data: mentor });
     } else {
-      // New mentor: create with documents arrays initialized
-      const toCreate = {
-        userId,
-        ...setObj,
-        documents: {
-          idProof: newIdProofUrls,
-          qualificationProof: newQualificationUrls,
-          cv: newCvUrls,
-        },
-      };
+      // New mentor → create profile AND send request to admin
+      const newMentor = await Mentor.create({ userId, ...data });
 
-      updated = await Mentor.create(toCreate);
+      // Create MentorRequest for admin approval
+      await MentorRequest.create({
+        mentorId: newMentor._id,
+        action: "create",
+        status: "pending",
+      });
 
       return res.status(201).json({
         success: true,
-        message: "Profile created",
-        data: updated,
+        message: "Profile created and sent for admin approval",
+        data: newMentor,
       });
     }
   } catch (err) {
@@ -214,25 +185,34 @@ export const createOrUpdateMentorProfile = async (req, res) => {
   }
 };
 
+
+
+
+
+
 export const getMentorProfile = async (req, res) => {
   try {
     const mentor = await Mentor.findOne({ userId: req.user.id });
-    if (!mentor) {
+    if (!mentor)
       return res
         .status(404)
         .json({ success: false, message: "Profile not found" });
-    }
     res.json({ success: true, data: mentor });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ success: false, message: err.message });
   }
 };
 
 
+
+
+
+
 export const deleteMentorDocument = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { docType, url } = req.body; // docType = "idProof" | "qualificationProof" | "cv"
+    const { docType, url } = req.body;
 
     if (!docType || !url) {
       return res.status(400).json({
@@ -243,7 +223,7 @@ export const deleteMentorDocument = async (req, res) => {
 
     const mentor = await Mentor.findOneAndUpdate(
       { userId },
-      { $pull: { [`documents.${docType}`]: url } }, // remove from array
+      { $pull: { [`documents.${docType}`]: url } },
       { new: true }
     );
 
@@ -262,5 +242,43 @@ export const deleteMentorDocument = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+
+
+
+
+
+export const getMentorRequests = async (req, res) => {
+  try {
+    const requests = await MentorRequest.find({ status: "pending" })
+      .populate("mentorId", "fullName email currentRole");
+    res.json({ success: true, data: requests });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+
+
+export const getMentorDetails = async (req, res) => {
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: "Invalid mentor ID" });
+  }
+
+  try {
+    const mentor = await Mentor.findById(id);
+
+    if (!mentor) {
+      return res.status(404).json({ message: "Mentor not found" });
+    }
+
+    res.status(200).json({ success: true, data: mentor });
+  } catch (error) {
+    res.status(500).json({ message: "Server Error", error });
   }
 };
