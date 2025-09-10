@@ -25,6 +25,7 @@ router.post(
   protect,
   authorize("mentor"),
   upload.fields([
+
     { name: "profilePicture", maxCount: 1 }, 
     { name: "idProof", maxCount: 1 }, 
     { name: "qualificationProof", maxCount: 1 }, 
