@@ -34,7 +34,7 @@ export const register = async (req, res) => {
 
     const { firstName, lastName, email, password, role } = req.body;
 
-    if (!["mentor", "student"].includes(role)) {
+    if (!["mentor", "student","admin"].includes(role)) {
       return res.status(400).json({ message: "Invalid role" });
     }
     const existingUser = await User.findOne({ email });
@@ -110,7 +110,7 @@ export const verifyOtp = async (req, res) => {
     // Delete temporary user
     await TempUser.deleteOne({ _id: userId });
 
-    // Send welcome email
+
     await sendEmail({
       to: user.email,
       subject: "Welcome to SkillMentroX 🎉",
