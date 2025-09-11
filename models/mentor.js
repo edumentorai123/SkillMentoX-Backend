@@ -1,4 +1,5 @@
 
+
 import mongoose from "mongoose";
 const courseSchema = new mongoose.Schema({
   category: { type: String, required: true, trim: true },
@@ -45,7 +46,7 @@ const mentorSchema = new mongoose.Schema(
       idProof: [{ type: String }],
       qualificationProof: [{ type: String }], 
       cv: [{ type: String }], 
-      profilePicture: { type: String }, 
+     
     },
     verificationStatus: {
       type: String,
