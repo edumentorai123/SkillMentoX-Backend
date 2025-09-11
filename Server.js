@@ -6,10 +6,11 @@ import authRoutes from "./routes/authRoutes.js";
 import connectDB from "./config/db.js";
 import mentorRoutes from "./routes/mentorRoutes.js";
 import StudentRoutes from "./routes/StudentRoutes.js";
-
 import chatRoutes from "./routes/chatRoutes.js";
 import { initSocket } from "./socket.js";
 import adminRouter from "./routes/adminRoute.js";
+import subscriptionRoutes from "./routes/subscriptionRoutes.js"
+
 
 dotenv.config();
 const app = express();
@@ -34,6 +35,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/mentor", mentorRoutes);
 app.use("/api/students", StudentRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/subscription", subscriptionRoutes);
 
 const server = createServer(app);
 initSocket(server);
