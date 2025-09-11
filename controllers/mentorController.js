@@ -236,21 +236,6 @@ export const approveMentorRequest = async (req, res) => {
 
 
 
-
-
-export const getMentorRequests = async (req, res) => {
-  try {
-    const requests = await MentorRequest.find({ status: "pending" })
-      .populate("mentorId", "fullName email currentRole");
-    res.json({ success: true, data: requests });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: err.message });
-  }
-};
-
-
-
 export const getMentorDetails = async (req, res) => {
   const { id } = req.params;
 
