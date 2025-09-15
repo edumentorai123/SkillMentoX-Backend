@@ -1,6 +1,5 @@
 import express from "express";
 import {
-  createMentorRequest,
   createOrUpdateMentorProfile,
   deleteMentorDocument,
 
@@ -8,6 +7,8 @@ import {
   approveMentorRequest,
   rejectMentorRequest,
   getMentorProfiles,
+  getMentorDetails,
+  createMentorRequest,
 
 } from "../controllers/mentorController.js";
 import { protect, authorize } from "../middleware/authMiddleware.js";
@@ -26,15 +27,31 @@ router.post(
   protect,
   authorize("mentor"),
   upload.fields([
-    { name: "profilePicture", maxCount: 1 },
-    { name: "idProof", maxCount: 10 },
-    { name: "qualificationProof", maxCount: 10 },
-    { name: "cv", maxCount: 10 },
+
+    { name: "profilePicture", maxCount: 1 }, 
+    { name: "idProof", maxCount: 1 }, 
+    { name: "qualificationProof", maxCount: 1 }, 
+    { name: "cv", maxCount: 1 },
   ]),
   createOrUpdateMentorProfile
 );
 
+router.get("/profile", protect, getMentorProfiles);
+router.delete("/document", protect, authorize("mentor"), deleteMentorDocument);
 
+
+router.get(
+  "/admin/mentor-requests",
+  protect,
+  authorize("admin"),
+  getMentorRequests
+);
+
+router.get(
+  "/admin/mentor/:id",
+  protect,
+  authorize("admin"),
+  getMentorDetails ) 
 
 router.delete("/document", protect, authorize("mentor"), deleteMentorDocument);
 router.post("/mentor-request", protect, createMentorRequest);

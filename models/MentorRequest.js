@@ -1,39 +1,17 @@
 import mongoose from "mongoose";
-const { Schema, Types } = mongoose;
 
-const mentorRequestSchema = new Schema(
+const mentorRequestSchema = new mongoose.Schema(
   {
-    user: { type: Types.ObjectId, ref: "User", required: true },
-    status: {
-      type: String,
-      enum: ["pending", "approved", "rejected"],
-      default: "pending",
-    },
-    reason: String,
-    priority: {
-      type: String,
-      enum: ["High", "Medium", "Low"],
-      default: "Medium",
-    },
-    type: {
-      type: String,
-      enum: [
-        "Mentor Application",
-        "Account Recovery",
-        "Content Report",
-        "Session Request",
-        "Course Addition",
-        "Technical Issue",
-        "Refund Request",
-        "Feature Request",
-      ],
-      default: "Mentor Application",
-    },
-    reviewedBy: { type: Types.ObjectId, ref: "User" },
-    reviewedAt: Date,
+    mentorId: { type: mongoose.Schema.Types.ObjectId, ref: "Mentor", required: true },
+    action: { type: String, enum: ["create", "update"], required: true },
+    status: { type: String, enum: ["pending", "approved", "Get Ready for Interview"], default: "pending" },
+    createdAt: { type: Date, default: Date.now },
   },
   { timestamps: true }
 );
 
-const MentorRequest = mongoose.model("MentorRequest", mentorRequestSchema);
+const MentorRequest =
+  mongoose.models.MentorRequest ||
+  mongoose.model("MentorRequest", mentorRequestSchema);
+
 export default MentorRequest;

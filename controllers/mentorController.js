@@ -1,4 +1,5 @@
 import Mentor from "../models/mentor.js";
+import MentorRequest from "../models/MentorRequest.js"; // Import MentorRequest
 import { courseCategories } from "../data/courseCategories.js";
 import { uploadBufferToCloudinary } from "../utils/cloudinaryUpload.js";
 import { mentorProfileSchema } from "../validation/mentorValidation.js";
@@ -45,7 +46,6 @@ export const createOrUpdateMentorProfile = async (req, res) => {
     const certifications = parseJSON(req.body.certifications, []);
     const courses = parseJSON(req.body.courses, []);
 
-
     const { error } = mentorProfileSchema.validate(
       {
         fullName,
@@ -54,7 +54,9 @@ export const createOrUpdateMentorProfile = async (req, res) => {
         currentRole,
         company,
         yearsOfExperience:
-          yearsOfExperience !== undefined ? Number(yearsOfExperience) : undefined,
+          yearsOfExperience !== undefined
+            ? Number(yearsOfExperience)
+            : undefined,
         email,
         phoneNumber,
         gender,
@@ -74,8 +76,6 @@ export const createOrUpdateMentorProfile = async (req, res) => {
         message: error.details.map((d) => d.message).join(", "),
       });
     }
-
-   
     if (Array.isArray(courses) && courses.length) {
       for (const c of courses) {
         if (!c?.category || !c?.courseName) {
@@ -147,20 +147,34 @@ export const createOrUpdateMentorProfile = async (req, res) => {
       data.documents.qualificationProof = qualificationProofUrl;
 
     let mentor = await Mentor.findOne({ userId });
+
     if (mentor) {
+      // Existing mentor → update profile
       mentor = await Mentor.findOneAndUpdate(
         { userId },
         { $set: data },
         { new: true }
       );
+
       return res
         .status(200)
         .json({ success: true, message: "Profile updated", data: mentor });
     } else {
+      // New mentor → create profile AND send request to admin
       const newMentor = await Mentor.create({ userId, ...data });
-      return res
-        .status(201)
-        .json({ success: true, message: "Profile created", data: newMentor });
+
+      // Create MentorRequest for admin approval
+      await MentorRequest.create({
+        mentorId: newMentor._id,
+        action: "create",
+        status: "pending",
+      });
+
+      return res.status(201).json({
+        success: true,
+        message: "Profile created and sent for admin approval",
+        data: newMentor,
+      });
     }
    }catch (err) {
     console.error(err);
@@ -182,23 +196,37 @@ export const getMentorProfiles= async (req, res) => {
   }
 };
 
-
-
-
-
-
 export const approveMentorRequest = async (req, res) => {
   try {
-    const { requestId } = req.params;
-    const mentor = await Mentor.findByIdAndUpdate(
-      requestId,
-      { status: "approved" },
+    const userId = req.user.id;
+    const { docType, url } = req.body;
+
+    if (!docType || !url) {
+      return res.status(400).json({
+        success: false,
+        message: "docType and url are required",
+      });
+    }
+
+    const mentor = await Mentor.findOneAndUpdate(
+      { userId },
+      { $pull: { [`documents.${docType}`]: url } },
       { new: true }
     );
+
     if (!mentor) {
-      return res.status(404).json({ success: false, message: "Mentor request not found" });
+
+      return res.status(404).json({
+        success: false,
+        message: "Mentor not found",
+      });
     }
-    res.json({ success: true, message: "Mentor request approved", data: mentor });
+
+    return res.status(200).json({
+      success: true,
+      message: "Document deleted",
+      data: mentor,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: err.message });
@@ -207,10 +235,33 @@ export const approveMentorRequest = async (req, res) => {
 
 
 
+
+export const getMentorDetails = async (req, res) => {
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: "Invalid mentor ID" });
+  }
+
+  try {
+    const mentor = await Mentor.findById(id);
+
+    if (!mentor) {
+      return res.status(404).json({ message: "Mentor not found" });
+    }
+
+    res.status(200).json({ success: true, data: mentor });
+  } catch (error) {
+    res.status(500).json({ message: "Server Error", error });
+  }
+};
+
 export const createMentorRequest = async (req, res) => {
   try {
-   
-    const mentor = await Mentor.create({ userId: req.user.id, status: "pending" });
+    const mentor = await Mentor.create({
+      userId: req.user.id,
+      status: "pending",
+    });
 
     res.status(201).json({
       success: true,
@@ -223,11 +274,10 @@ export const createMentorRequest = async (req, res) => {
   }
 };
 
-
 export const deleteMentorDocument = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { docType } = req.body; 
+    const { docType } = req.body;
 
     if (!docType) {
       return res.status(400).json({
@@ -264,12 +314,11 @@ export const deleteMentorDocument = async (req, res) => {
   }
 };
 
-
 export const getMentorRequests = async (req, res) => {
   try {
-   
-    const mentors = await Mentor.find({ status: { $in: ["pending", "approved", "rejected"] } })
-      .populate("userId", "name email");
+    const mentors = await Mentor.find({
+      status: { $in: ["pending", "approved", "rejected"] },
+    }).populate("userId", "name email");
 
     res.json({
       success: true,
@@ -281,12 +330,10 @@ export const getMentorRequests = async (req, res) => {
   }
 };
 
-
-
 export const rejectMentorRequest = async (req, res) => {
   try {
     const { requestId } = req.params;
-    const { reason } = req.body; 
+    const { reason } = req.body;
 
     const mentor = await Mentor.findByIdAndUpdate(
       requestId,
