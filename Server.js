@@ -10,6 +10,7 @@ import chatRoutes from "./routes/chatRoutes.js";
 import { initSocket } from "./socket.js";
 import adminRouter from "./routes/adminRoute.js";
 import subscriptionRoutes from "./routes/subscriptionRoutes.js"
+import studentRequestRoutes from "./routes/studentRequestRoutes.js"
 
 
 dotenv.config();
@@ -36,6 +37,7 @@ app.use("/api/mentor", mentorRoutes);
 app.use("/api/students", StudentRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/subscription", subscriptionRoutes);
+app.use("/api/requests", studentRequestRoutes);
 
 const server = createServer(app);
 initSocket(server);
