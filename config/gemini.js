@@ -13,6 +13,7 @@ async function getToken() {
   return token.token;
 }
 
+
 export async function chatWithGemini(messages = []) {
   const prompt = messages.map(m => `${m.role || "user"}: ${m.content || m.text}`).join("\n") + "\nassistant:";
 
