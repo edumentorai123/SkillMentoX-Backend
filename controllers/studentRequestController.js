@@ -10,15 +10,12 @@ export const createRequest = async (req, res) => {
         const student = await User.findById(studentId);
         if (!student) return res.status(404).json({ message: "Student not found" });
 
-
         const request = new StudentRequest({
             student: studentId,
             category,
             stack,
             status: "pending",
         });
-
-        
 
         await request.save();
 
