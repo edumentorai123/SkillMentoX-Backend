@@ -19,7 +19,7 @@ export const handleChat = async (req, res) => {
         ];
 
 
-        const reply = await chatWithHF(chatMessages);
+        const reply = await chatWithGemini(chatMessages);
 
         return res.status(200).json({ reply });
     } catch (err) {
