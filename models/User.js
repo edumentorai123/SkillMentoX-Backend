@@ -12,7 +12,7 @@ const userSchema = new mongoose.Schema({
     trim: true,
   },
   password: { type: String },
-  role: { type: String, enum: ["mentor", "student", "admin"], default: null },
+  role: { type: String, enum: ["mentor", "student" , "admin"], default: null },
   provider: { type: String, enum: ["email", "google"], default: "email" },
   resetPasswordToken: String,
   resetPasswordExpire: Date,
@@ -20,7 +20,6 @@ const userSchema = new mongoose.Schema({
   otpCode: String,
   otpExpires: Date,
   isVerified: { type: Boolean, default: false },
-
 
   isPremium: { type: Boolean, default: false },
   stripeCustomerId: { type: String },     

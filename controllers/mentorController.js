@@ -1,5 +1,5 @@
 import Mentor from "../models/mentor.js";
-import MentorRequest from "../models/MentorRequest.js"; // Import MentorRequest
+import MentorRequest from "../models/MentorRequest.js";
 import { courseCategories } from "../data/courseCategories.js";
 import { uploadBufferToCloudinary } from "../utils/cloudinaryUpload.js";
 import { mentorProfileSchema } from "../validation/mentorValidation.js";
@@ -232,7 +232,6 @@ export const approveMentorRequest = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
-
 
 
 
