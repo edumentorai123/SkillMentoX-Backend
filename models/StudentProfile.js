@@ -53,7 +53,33 @@ const StudentProfile = new mongoose.Schema(
     selectedStack: {
       type: String,
       required: true,
-      trim: true, 
+      trim: true,
+    },
+
+    isSubscribed: {
+      type: Boolean,
+      default: false,
+    },
+    subscriptionType: {
+      type: String,
+      enum: ["monthly", "yearly", "lifetime"],
+      default: null,
+    },
+    subscriptionStart: {
+      type: Date,
+      default: null,
+    },
+    subscriptionEnd: {
+      type: Date,
+      default: null,
+    },
+    stripeCustomerId: {
+      type: String,
+      default: null,
+    },
+    subscriptionId: {
+      type: String,
+      default: null,
     },
   },
   { timestamps: true }

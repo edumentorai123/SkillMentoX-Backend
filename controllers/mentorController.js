@@ -1,5 +1,5 @@
 import Mentor from "../models/mentor.js";
-import MentorRequest from "../models/MentorRequest.js"; // Import MentorRequest
+import MentorRequest from "../models/MentorRequest.js";
 import { courseCategories } from "../data/courseCategories.js";
 import { uploadBufferToCloudinary } from "../utils/cloudinaryUpload.js";
 import { mentorProfileSchema } from "../validation/mentorValidation.js";
@@ -227,22 +227,6 @@ export const approveMentorRequest = async (req, res) => {
       message: "Document deleted",
       data: mentor,
     });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: err.message });
-  }
-};
-
-
-
-
-
-
-export const getMentorRequests = async (req, res) => {
-  try {
-    const requests = await MentorRequest.find({ status: "pending" })
-      .populate("mentorId", "fullName email currentRole");
-    res.json({ success: true, data: requests });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: err.message });

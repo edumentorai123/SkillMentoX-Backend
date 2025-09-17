@@ -20,6 +20,12 @@ const userSchema = new mongoose.Schema({
   otpCode: String,
   otpExpires: Date,
   isVerified: { type: Boolean, default: false },
+
+  isPremium: { type: Boolean, default: false },
+  stripeCustomerId: { type: String },     
+  subscriptionId: { type: String },       
+  subscriptionStatus: { type: String },   
+  subscriptionEnd: { type: Date },       
 });
 
 userSchema.pre("save", async function (next) {

@@ -1,4 +1,5 @@
-import { chatWithHF } from "../config/huggingface.js";
+import { chatWithGemini } from "../config/gemini.js";
+
 
 export const handleChat = async (req, res) => {
     try {
@@ -16,6 +17,7 @@ export const handleChat = async (req, res) => {
             ...messages,
             { role: "user", content: message.trim() },
         ];
+
 
         const reply = await chatWithHF(chatMessages);
 

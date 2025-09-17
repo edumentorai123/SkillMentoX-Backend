@@ -27,13 +27,11 @@ export function initSocket(server) {
         });
     });
 
-    console.log("Socket.IO initialized");
+    console.log("Socket.IO Connected");
     return io;
 }
 
 export function getSocket() {
-    if (!io) {
-        throw new Error("Socket.io not initialized!");
-    }
+    if (!io) throw new Error("Socket.io not initialized!");
     return io;
 }
