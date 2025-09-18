@@ -1,62 +1,77 @@
 import { HfInference } from "@huggingface/inference";
 
-// Free-tier friendly model
-const MODEL_NAME = "google/flan-t5-small";
-
-// Put your HF API keys in .env
+const MODEL_NAME = process.env.HF_MODEL || "google/flan-t5-small";
 const HF_API_KEYS = [
   process.env.HF_API_KEY1,
   process.env.HF_API_KEY2,
-  process.env.HF_API_KEY3,
+  process.env.HF_API_KEY3
 ].filter(Boolean);
 
-if (HF_API_KEYS.length === 0) {
-  throw new Error("No HuggingFace API keys provided in .env");
+let currentKeyIndex = 0;
+const createHF = (key) => new HfInference(key);
+let hf = HF_API_KEYS.length ? createHF(HF_API_KEYS[currentKeyIndex]) : null;
+
+function mockReply(messages) {
+  const last = messages && messages.length ? (messages[messages.length - 1].content || messages[messages.length - 1].text || "") : "";
+  return `Demo reply (no AI available). You said: "${String(last).slice(0, 150)}" — configure a valid HF API key to get real AI replies.`;
 }
 
-let currentKeyIndex = 0;
+export async function chatWithHF(messages = []) {
+  if (!Array.isArray(messages) || messages.length === 0) {
+    return "No messages provided";
+  }
 
-// Helper to create HfInference instance
-const createHF = (key) => new HfInference(key);
-let hf = createHF(HF_API_KEYS[currentKeyIndex]);
+  const prompt = messages.map(m => `${m.role || "user"}: ${m.content || m.text || ""}`).join("\n") + "\nassistant:";
 
-/**
- * Chat function: converts messages to text input and calls HF model
- * Handles multiple keys, retries, and rate limit switching
- */
-export async function chatWithHF(messages) {
-  const maxRetries = HF_API_KEYS.length;
-  let attempt = 0;
+  if (!hf) {
+    console.warn("No HF API keys configured — returning mock reply.");
+    return mockReply(messages);
+  }
 
-  // Convert messages array to single string for FLAN-T5
-  const userInput =
-    messages
-      .map((msg) => `${msg.role === "user" ? "User: " : "Assistant: "}${msg.content}`)
-      .join("\n") + "\nAssistant:";
-
-  while (attempt < maxRetries) {
+  const maxAttempts = Math.max(1, HF_API_KEYS.length);
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
-      const response = await hf.textGeneration({
+      console.log(`HF: using key index ${currentKeyIndex} (attempt ${attempt + 1}/${maxAttempts}), model=${MODEL_NAME}`);
+      const resp = await hf.textGeneration({
         model: MODEL_NAME,
-        inputs: userInput,
-        max_new_tokens: 150,
-        temperature: 0.7,
+        inputs: prompt,
+        max_new_tokens: Number(process.env.HF_MAX_TOKENS) || 150,
+        temperature: Number(process.env.HF_TEMPERATURE) || 0.7,
       });
 
-      // Return the generated text
-      return response?.generated_text?.trim() || "No reply from AI";
+      const reply = resp?.generated_text || resp?.data?.[0]?.generated_text || resp?.[0]?.generated_text;
+      if (reply && String(reply).trim()) return String(reply).trim();
+      throw new Error("Empty reply from HF");
     } catch (err) {
-      console.error(`HuggingFace Chat Error (key ${currentKeyIndex}):`, err.message);
+      const message = String(err?.message || err).toLowerCase();
+      console.error("HuggingFace error:", message);
 
-      // Rotate to next key
-      attempt++;
-      currentKeyIndex = (currentKeyIndex + 1) % HF_API_KEYS.length;
-      hf = createHF(HF_API_KEYS[currentKeyIndex]);
+      if (message.includes("exceeded") || message.includes("credits") || message.includes("quota")) {
+        return "All AI tokens exhausted or invalid. Please check your Hugging Face account/quota.";
+      }
 
-      // If last attempt, throw a clear error
-      if (attempt === maxRetries) {
-        return "All AI tokens exhausted or invalid. Please try again later.";
+      if ((message.includes("invalid") || message.includes("401") || message.includes("unauthorized")) && HF_API_KEYS.length > 1) {
+        currentKeyIndex = (currentKeyIndex + 1) % HF_API_KEYS.length;
+        hf = createHF(HF_API_KEYS[currentKeyIndex]);
+        await new Promise(r => setTimeout(r, 300));
+        continue;
+      }
+
+      if (HF_API_KEYS.length > 1) {
+        currentKeyIndex = (currentKeyIndex + 1) % HF_API_KEYS.length;
+        hf = createHF(HF_API_KEYS[currentKeyIndex]);
+        await new Promise(r => setTimeout(r, 300));
+        continue;
+      }
+
+      if (attempt === maxAttempts - 1) {
+        console.error("HF: all attempts failed, returning mock reply.");
+        return mockReply(messages);
       }
     }
   }
+
+  return mockReply(messages);
 }
+
+export default chatWithHF;
