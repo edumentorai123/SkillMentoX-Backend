@@ -234,7 +234,6 @@ export const approveMentorRequest = async (req, res) => {
 };
 
 
-
 export const getMentorDetails = async (req, res) => {
   const { id } = req.params;
 

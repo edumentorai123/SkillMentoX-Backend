@@ -1,12 +1,16 @@
+// socket.js (ESM)
 import { Server } from "socket.io";
 
 let io;
 
 export function initSocket(server) {
+    if (io) return io;
+
     io = new Server(server, {
         cors: {
-            origin: process.env.FRONTEND_URL,
+            origin: process.env.FRONTEND_URL || "http://localhost:3000",
             credentials: true,
+            methods: ["GET", "POST"],
         },
     });
 

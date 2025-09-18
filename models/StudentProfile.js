@@ -47,7 +47,7 @@ const StudentProfile = new mongoose.Schema(
     selectedCategory: {
       type: String,
       required: true,
-      trim: true, 
+      trim: true,
     },
 
     selectedStack: {
