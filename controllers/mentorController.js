@@ -3,6 +3,7 @@ import MentorRequest from "../models/MentorRequest.js";
 import { courseCategories } from "../data/courseCategories.js";
 import { uploadBufferToCloudinary } from "../utils/cloudinaryUpload.js";
 import { mentorProfileSchema } from "../validation/mentorValidation.js";
+import mongoose from "mongoose";
 
 
 const isValidCourse = (category, courseName) => {
@@ -160,10 +161,9 @@ export const createOrUpdateMentorProfile = async (req, res) => {
         .status(200)
         .json({ success: true, message: "Profile updated", data: mentor });
     } else {
-      // New mentor → create profile AND send request to admin
       const newMentor = await Mentor.create({ userId, ...data });
 
-      // Create MentorRequest for admin approval
+   
       await MentorRequest.create({
         mentorId: newMentor._id,
         action: "create",
@@ -195,6 +195,7 @@ export const getMentorProfiles= async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
 
 export const approveMentorRequest = async (req, res) => {
   try {
@@ -235,24 +236,28 @@ export const approveMentorRequest = async (req, res) => {
 
 
 export const getMentorDetails = async (req, res) => {
-  const { id } = req.params;
-
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).json({ message: "Invalid mentor ID" });
-  }
-
   try {
-    const mentor = await Mentor.findById(id);
+    const { id } = req.params;
+
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: "Invalid mentor ID" });
+    }
+
+    const mentor = await Mentor.findById(id)
+      .populate("userId", "name email role") 
+      .lean();
 
     if (!mentor) {
-      return res.status(404).json({ message: "Mentor not found" });
+      return res.status(404).json({ success: false, message: "Mentor not found" });
     }
 
     res.status(200).json({ success: true, data: mentor });
   } catch (error) {
-    res.status(500).json({ message: "Server Error", error });
+    console.error("❌ Error fetching mentor details:", error);
+    res.status(500).json({ success: false, message: "Server error", error: error.message });
   }
 };
+
 
 export const createMentorRequest = async (req, res) => {
   try {

@@ -14,7 +14,7 @@ const studentRequestSchema = new mongoose.Schema(
         },
         status: {
             type: String,
-            enum: ["pending", "accepted"],
+            enum: ["pending", "accepted", "resolved"],
             default: "pending",
         },
         stack: {
@@ -31,6 +31,22 @@ const studentRequestSchema = new mongoose.Schema(
             type: String,
             trim: true,
         },
+        replies: [{
+            mentor: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Mentor",
+                required: true,
+            },
+            text: {
+                type: String,
+                required: true,
+                trim: true,
+            },
+            time: {
+                type: Date,
+                default: Date.now,
+            },
+        }],
         requestedAt: {
             type: Date,
             default: Date.now,
