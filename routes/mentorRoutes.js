@@ -7,8 +7,8 @@ import {
   approveMentorRequest,
   rejectMentorRequest,
   getMentorProfiles,
-  getMentorDetails,
   createMentorRequest,
+  getMentorDetails,
 
 } from "../controllers/mentorController.js";
 import { protect, authorize } from "../middleware/authMiddleware.js";
@@ -47,17 +47,15 @@ router.get(
   getMentorRequests
 );
 
-router.get(
-  "/admin/mentor/:id",
-  protect,
-  authorize("admin"),
-  getMentorDetails ) 
+
+
+router.get("/getMentorDetails/:id", protect, authorize("admin"), getMentorDetails);
+
 
 router.delete("/document", protect, authorize("mentor"), deleteMentorDocument);
 router.post("/mentor-request", protect, createMentorRequest);
 router.get("/mentor-requests", protect, getMentorRequests);
-router.patch(
-  "/mentor-requests/:id/approve",
+router.patch("/mentor-requests/:id/approve",
   protect,
   authorize("admin"),
   approveMentorRequest

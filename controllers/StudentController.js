@@ -1,6 +1,3 @@
-import StudentProfile from "../models/StudentProfile.js";
-
-
 export const createProfile = async (req, res) => {
   try {
     const profile = new StudentProfile(req.body);
