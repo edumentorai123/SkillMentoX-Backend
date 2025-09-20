@@ -60,13 +60,14 @@ const studentRequestSchema = new mongoose.Schema(
     {
         timestamps: true,
     }
+    
 );
 
 studentRequestSchema.pre("save", function (next) {
     this.updatedAt = Date.now();
     next();
+
 });
 
 const StudentRequest = mongoose.model("StudentRequest", studentRequestSchema);
-
 export default StudentRequest;
