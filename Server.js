@@ -11,6 +11,12 @@ import { initSocket } from "./socket.js";
 import adminRouter from "./routes/adminRoute.js";
 import subscriptionRoutes from "./routes/subscriptionRoutes.js"
 import studentRequestRoutes from "./routes/studentRequestRoutes.js"
+import eventRoutes from "./routes/eventRoutes.js"
+import badgeRoutes from "./routes/badgeRoutes.js"
+import progressRoutes from "./routes/progressRoutes.js"
+import streakRoutes from "./routes/streakRoutes.js"
+import doubtsRoutes from "./routes/doubtsRoutes.js"
+import courseRoutes from "./routes/courseRoute.js"
 
 
 dotenv.config();
@@ -38,6 +44,15 @@ app.use("/api/students", StudentRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/subscription", subscriptionRoutes);
 app.use("/api/requests", studentRequestRoutes);
+app.use("/api/events", eventRoutes);
+app.use("/api/achievements", badgeRoutes);
+app.use("/api/students/progress", progressRoutes);
+app.use("/api/streaks", streakRoutes);
+app.use("/api/doubts", doubtsRoutes);
+app.use('/api/courses', courseRoutes);
+
+
+
 
 const server = createServer(app);
 initSocket(server);
