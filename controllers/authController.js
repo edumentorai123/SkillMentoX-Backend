@@ -121,6 +121,22 @@ export const verifyOtp = async (req, res) => {
 
     const token = generateToken(user);
 
+    // Set HTTP-only cookies
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+      domain: process.env.NODE_ENV === 'production' ? undefined : 'localhost',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+    res.cookie('role', user.role, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+      domain: process.env.NODE_ENV === 'production' ? undefined : 'localhost',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+
     res.json({
       message: "OTP verified successfully",
       token,
@@ -200,6 +216,23 @@ export const login = async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
 
     const token = generateToken(user);
+
+    // Set HTTP-only cookies
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+      domain: process.env.NODE_ENV === 'production' ? undefined : 'localhost',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+    res.cookie('role', user.role, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+      domain: process.env.NODE_ENV === 'production' ? undefined : 'localhost',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+
     res.json({
       message: "Logged in",
       token,
@@ -297,6 +330,27 @@ export const resetPassword = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const getUserById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id).select("firstName lastName email role");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json({
+      _id: user._id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      fullName: `${user.firstName} ${user.lastName}`.trim(),
+      email: user.email,
+      role: user.role,
+    });
+  } catch (err) {
+    console.error("Error fetching user:", err);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 

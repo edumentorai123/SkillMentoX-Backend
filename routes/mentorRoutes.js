@@ -10,6 +10,7 @@ import {
   createMentorRequest,
   getMentorDetails,
   getApprovedStudents,
+  getMentorProfileById,
 
 } from "../controllers/mentorController.js";
 import { protect, authorize } from "../middleware/authMiddleware.js";
@@ -48,6 +49,7 @@ router.get(
   getMentorRequests
 );
 
+router.get("/getprofile/:id", protect, getMentorProfileById);
 
 
 router.get("/getMentorDetails/:id", protect, authorize("admin"), getMentorDetails);

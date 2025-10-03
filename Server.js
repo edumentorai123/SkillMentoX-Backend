@@ -1,6 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import { createServer } from "http";
 import authRoutes from "./routes/authRoutes.js";
 import connectDB from "./config/db.js";
@@ -10,17 +11,17 @@ import chatRoutes from "./routes/chatRoutes.js";
 import { initSocket } from "./socket.js";
 import adminRouter from "./routes/adminRoute.js";
 import subscriptionRoutes from "./routes/subscriptionRoutes.js"
-import studentRequestRoutes from "./routes/studentRequestRoutes.js"
 import eventRoutes from "./routes/eventRoutes.js"
 import badgeRoutes from "./routes/badgeRoutes.js"
 import progressRoutes from "./routes/progressRoutes.js"
 import streakRoutes from "./routes/streakRoutes.js"
 import doubtsRoutes from "./routes/doubtsRoutes.js"
 import courseRoutes from "./routes/courseRoute.js"
-
+import quizRoutes from "./routes/quizRoutes.js";
 
 dotenv.config();
 const app = express();
+
 
 connectDB().catch((error) => {
   console.error("Failed to connect to MongoDB, continuing without DB:", error);
@@ -35,6 +36,7 @@ app.use(
   })
 );
 
+app.use(cookieParser());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
@@ -43,13 +45,13 @@ app.use("/api/mentor", mentorRoutes);
 app.use("/api/students", StudentRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/subscription", subscriptionRoutes);
-app.use("/api/requests", studentRequestRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/achievements", badgeRoutes);
 app.use("/api/students/progress", progressRoutes);
 app.use("/api/streaks", streakRoutes);
 app.use("/api/doubts", doubtsRoutes);
 app.use('/api/courses', courseRoutes);
+app.use('/api/quizzes', quizRoutes);
 
 
 
@@ -57,7 +59,6 @@ app.use('/api/courses', courseRoutes);
 const server = createServer(app);
 initSocket(server);
 app.use("/api/admin",adminRouter)
-app.use("/api/students",StudentRoutes)
 
 
 const PORT = process.env.PORT || 9999;

@@ -10,8 +10,5 @@ const router = express.Router();
 router.get("/getAllmentors", getAllMentors)
 router.get("/getAllusers",getAllUsers)
 router.get("/getAllStudents",getAllStudents)
- 
-
-
 
 export default router;
