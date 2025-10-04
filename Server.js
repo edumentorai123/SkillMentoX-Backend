@@ -10,7 +10,6 @@ import chatRoutes from "./routes/chatRoutes.js";
 import { initSocket } from "./socket.js";
 import adminRouter from "./routes/adminRoute.js";
 import subscriptionRoutes from "./routes/subscriptionRoutes.js"
-import studentRequestRoutes from "./routes/studentRequestRoutes.js"
 import eventRoutes from "./routes/eventRoutes.js"
 import badgeRoutes from "./routes/badgeRoutes.js"
 import progressRoutes from "./routes/progressRoutes.js"
@@ -43,7 +42,6 @@ app.use("/api/mentor", mentorRoutes);
 app.use("/api/students", StudentRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/subscription", subscriptionRoutes);
-app.use("/api/requests", studentRequestRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/achievements", badgeRoutes);
 app.use("/api/students/progress", progressRoutes);
@@ -57,7 +55,6 @@ app.use('/api/courses', courseRoutes);
 const server = createServer(app);
 initSocket(server);
 app.use("/api/admin",adminRouter)
-app.use("/api/students",StudentRoutes)
 
 
 const PORT = process.env.PORT || 9999;

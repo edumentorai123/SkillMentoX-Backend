@@ -1,4 +1,3 @@
-// socket.js (ESM)
 import { Server } from "socket.io";
 
 let io;
