@@ -34,7 +34,7 @@ export const register = async (req, res) => {
 
     const { firstName, lastName, email, password, role } = req.body;
 
-    if (!["mentor", "student","admin"].includes(role)) {
+    if (!["mentor", "student", "admin"].includes(role)) {
       return res.status(400).json({ message: "Invalid role" });
     }
     const existingUser = await User.findOne({ email });
@@ -58,7 +58,6 @@ export const register = async (req, res) => {
     });
     await tempUser.save();
 
-    // Send OTP email
     await sendEmail({
       to: email,
       subject: "Verify Your Email - OTP",
@@ -109,7 +108,6 @@ export const verifyOtp = async (req, res) => {
 
     // Delete temporary user
     await TempUser.deleteOne({ _id: userId });
-
 
     await sendEmail({
       to: user.email,
@@ -162,7 +160,6 @@ export const resendOtp = async (req, res) => {
         .status(400)
         .json({ message: "User ID and email are required" });
     }
-
 
     const tempUser = await TempUser.findOne({ _id: userId, email });
     if (!tempUser) {
@@ -250,7 +247,6 @@ export const login = async (req, res) => {
   }
 };
 
-
 export const forgotPassword = async (req, res) => {
   try {
     const { error } = forgotPasswordSchema.validate(req.body);
@@ -269,7 +265,7 @@ export const forgotPassword = async (req, res) => {
       .createHash("sha256")
       .update(resetToken)
       .digest("hex");
-    user.resetPasswordExpire = Date.now() + 1000 * 60 * 60; // 1 hour
+    user.resetPasswordExpire = Date.now() + 1000 * 60 * 60;
     await user.save();
 
     const resetUrl = `${process.env.FRONTEND_URL}/resetPassword/${resetToken}`;
@@ -294,8 +290,6 @@ export const forgotPassword = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-
-
 
 export const resetPassword = async (req, res) => {
   try {

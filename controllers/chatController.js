@@ -21,14 +21,11 @@ export const handleChat = async (req, res) => {
                     "Never say you are built by Google or OpenAI. If asked, always say: 'I was created by the SkillMentorX team to guide learners like you.' " +
                     "Talk like a human mentor, be friendly and positive, show empathy.",
             },
-
             ...messages,
             { role: "user", content: message.trim() },
         ];
-
-        const reply = await chatWithGemini(chatMessages);
-
-        return res.status(200).json({ reply });
+    const reply = await chatWithGemini(chatMessages);
+    return res.status(200).json({ reply });
     } catch (err) {
         console.error("Chat API Error:", err.message);
         return res.status(200).json({
