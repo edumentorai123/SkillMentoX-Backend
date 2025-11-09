@@ -1,4 +1,5 @@
 import Mentor from "../models/mentor.js";
+import StudentProfile from "../models/StudentProfile.js";
 import User from "../models/User.js";
 
 export const getAllMentors = async (req, res) => {
@@ -39,4 +40,20 @@ export const getAllUsers = async (req, res) => {
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
+
+
+export const getAllStudents = async (req, res) => {
+  try {
+    const profiles = await StudentProfile.find();
+    res.json(profiles);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+
+
+
+
+
+
 

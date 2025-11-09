@@ -1,6 +1,5 @@
-
-
 import mongoose from "mongoose";
+
 const courseSchema = new mongoose.Schema({
   category: { type: String, required: true, trim: true },
   courseName: { type: String, required: true, trim: true },
@@ -14,13 +13,11 @@ const mentorSchema = new mongoose.Schema(
       required: true,
     },
     fullName: { type: String, required: true, trim: true },
-
     headline: { type: String, trim: true },
     bio: { type: String, trim: true, maxlength: 1000 },
     currentRole: { type: String, trim: true },
     company: { type: String, trim: true },
     yearsOfExperience: { type: Number, min: 0 },
-
     education: [
       {
         degree: { type: String, trim: true },
@@ -30,29 +27,32 @@ const mentorSchema = new mongoose.Schema(
     ],
     certifications: [{ type: String, trim: true }],
     courses: [courseSchema],
-
     email: { type: String, required: true, lowercase: true, trim: true },
     linkedin: { type: String, trim: true },
     github: { type: String, trim: true },
     portfolio: { type: String, trim: true },
     gender: {
       type: String,
-      enum: ["Male", "Female"],
+      enum: ["Male", "Female","Other"], 
       trim: true,
     },
     phoneNumber: { type: String, trim: true },
-
     documents: {
       idProof: [{ type: String }],
-      qualificationProof: [{ type: String }], 
-      cv: [{ type: String }], 
-     
+      qualificationProof: [{ type: String }],
+      cv: [{ type: String }],
     },
-    verificationStatus: {
+    status: {
       type: String,
-      enum: ["Pending", "approved", "Rejected"],
-      default: "Pending",
+      enum: ["pending", "approved", "rejected"], 
+      default: "pending",
     },
+    students: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Student",
+      },
+    ],
   },
   { timestamps: true }
 );

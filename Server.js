@@ -1,6 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import { createServer } from "http";
 import authRoutes from "./routes/authRoutes.js";
 import connectDB from "./config/db.js";
@@ -9,15 +10,14 @@ import StudentRoutes from "./routes/StudentRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
 import { initSocket } from "./socket.js";
 import adminRouter from "./routes/adminRoute.js";
-import subscriptionRoutes from "./routes/subscriptionRoutes.js"
-import studentRequestRoutes from "./routes/studentRequestRoutes.js"
-import eventRoutes from "./routes/eventRoutes.js"
-import badgeRoutes from "./routes/badgeRoutes.js"
-import progressRoutes from "./routes/progressRoutes.js"
-import streakRoutes from "./routes/streakRoutes.js"
-import doubtsRoutes from "./routes/doubtsRoutes.js"
-import courseRoutes from "./routes/courseRoute.js"
-
+import subscriptionRoutes from "./routes/subscriptionRoutes.js";
+import eventRoutes from "./routes/eventRoutes.js";
+import badgeRoutes from "./routes/badgeRoutes.js";
+import progressRoutes from "./routes/progressRoutes.js";
+import streakRoutes from "./routes/streakRoutes.js";
+import doubtsRoutes from "./routes/doubtsRoutes.js";
+import courseRoutes from "./routes/courseRoute.js";
+import quizRoutes from "./routes/quizRoutes.js";
 
 dotenv.config();
 const app = express();
@@ -26,15 +26,30 @@ connectDB().catch((error) => {
   console.error("Failed to connect to MongoDB, continuing without DB:", error);
 });
 
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://skill-mento-x-frontend.vercel.app",
+  "https://skill-mento-x-frontend-b3odfbcvg-skillmentorxs-projects.vercel.app"
+];
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL,
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.warn("❌ Blocked by CORS:", origin);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
+
+app.use(cookieParser());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
@@ -43,22 +58,17 @@ app.use("/api/mentor", mentorRoutes);
 app.use("/api/students", StudentRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/subscription", subscriptionRoutes);
-app.use("/api/requests", studentRequestRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/achievements", badgeRoutes);
 app.use("/api/students/progress", progressRoutes);
 app.use("/api/streaks", streakRoutes);
 app.use("/api/doubts", doubtsRoutes);
-app.use('/api/courses', courseRoutes);
-
-
-
+app.use("/api/courses", courseRoutes);
+app.use("/api/quizzes", quizRoutes);
 
 const server = createServer(app);
 initSocket(server);
-app.use("/api/admin",adminRouter)
-app.use("/api/students",StudentRoutes)
-
+app.use("/api/admin", adminRouter);
 
 const PORT = process.env.PORT || 9999;
 server.listen(PORT, () => {

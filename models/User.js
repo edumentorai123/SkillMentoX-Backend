@@ -28,6 +28,15 @@ const userSchema = new mongoose.Schema({
   subscriptionEnd: { type: Date },       
 });
 
+// Virtual fullName field
+userSchema.virtual("fullName").get(function () {
+  return `${this.firstName} ${this.lastName}`;
+});
+
+// Make sure virtuals show in JSON responses
+userSchema.set("toJSON", { virtuals: true });
+userSchema.set("toObject", { virtuals: true });
+
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
   const salt = await bcrypt.genSalt(10);

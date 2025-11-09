@@ -5,7 +5,7 @@ const MODEL = "gemini-1.5-flash";
 
 async function getToken() {
   const auth = new GoogleAuth({
-    keyFile:  process.env.GOOGLE_APPLICATION_CREDENTIALS,
+    keyFile: process.env.GOOGLE_APPLICATION_CREDENTIALS,
     scopes: ["https://www.googleapis.com/auth/generative-language"],
   });
   const client = await auth.getClient();
@@ -13,14 +13,16 @@ async function getToken() {
   return token.token;
 }
 
-
 export async function chatWithGemini(messages = []) {
-  const prompt = messages.map(m => `${m.role || "user"}: ${m.content || m.text}`).join("\n") + "\nassistant:";
+  const prompt =
+    messages
+      .map((m) => `${m.role || "user"}: ${m.content || m.text}`)
+      .join("\n") + "\nassistant:";
 
   const accessToken = await getToken();
 
   const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,
+    `https://generativelanguage.googleapis.com/v1beta1/models/${MODEL}:generateContent`,
     {
       method: "POST",
       headers: {
@@ -48,5 +50,8 @@ export async function chatWithGemini(messages = []) {
   if (data.error) {
     throw new Error(data.error.message || "Gemini API error");
   }
-  return data?.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn’t generate a response.";
+  return (
+    data?.candidates?.[0]?.content?.parts?.[0]?.text ||
+    "Sorry, I couldn’t generate a response."
+  );
 }

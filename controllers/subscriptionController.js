@@ -3,14 +3,14 @@ import stripe from "../utils/stripe.js";
 
 export const createCheckoutSession = async (req, res) => {
     try {
-            const { priceId, subscriptionType, category, stack } = req.body;
-            const studentId = req.user.id;
+        const { priceId, subscriptionType, category, stack } = req.body;
+        const studentId = req.user.id;
 
         if (!priceId) {
             return res.status(400).json({ message: "Price ID is required" });
         }
 
-        const student = await Student.findOne({ email: req.user.email });
+        const student = await Student.findOne({ userId: studentId });
         if (!student) return res.status(404).json({ message: "Student not found" });
 
         if (!student.stripeCustomerId) {
@@ -20,15 +20,21 @@ export const createCheckoutSession = async (req, res) => {
                 metadata: { studentId: student._id.toString() },
             });
             student.stripeCustomerId = customer.id;
-            await student.save();
         }
+
+        // Update category and stack
+        if (category && stack) {
+            student.selectedCategory = category;
+            student.selectedStack = stack;
+        }
+        await student.save();
 
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ["card"],
             mode: "subscription",
             customer: student.stripeCustomerId,
             line_items: [{ price: priceId, quantity: 1 }],
-            success_url: `${process.env.FRONTEND_URL}/subscription/success?session_id={CHECKOUT_SESSION_ID}&category=${category}&stack=${stack}`,
+            success_url: `${process.env.FRONTEND_URL}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${process.env.FRONTEND_URL}/subscription/cancel`,
         });
 
@@ -42,12 +48,10 @@ export const createCheckoutSession = async (req, res) => {
                 code: err.raw.code,
             });
         }
-        return res
-            .status(500)
-            .json({
-                message: "Failed to create checkout session",
-                error: err.message,
-            });
+        return res.status(500).json({
+            message: "Failed to create checkout session",
+            error: err.message,
+        });
     }
 };
 
@@ -78,7 +82,7 @@ export const stripeWebhook = async (req, res) => {
                     student.subscriptionStart = new Date();
                     student.subscriptionEnd = new Date(
                         new Date().setMonth(new Date().getMonth() + 1)
-                    ); // example monthly
+                    );
                     student.subscriptionId = session.subscription;
                     await student.save();
                 }
@@ -111,32 +115,47 @@ export const stripeWebhook = async (req, res) => {
 
 export const verifySession = async (req, res) => {
     try {
-        const { session_id } = req.query;
-        if (!session_id)
-            return res
-                .status(400)
-                .json({ success: false, message: "Missing session_id" });
+        const { sessionId } = req.body;
+        if (!sessionId) {
+            return res.status(400).json({ success: false, message: "Missing sessionId" });
+        }
 
-        const session = await stripe.checkout.sessions.retrieve(session_id);
+        // Use the authenticated user's ID for security
+        const userId = req.user.id;
+        const student = await Student.findOne({ userId, email: req.user.email });
+        if (!student) {
+            return res.status(404).json({ success: false, message: "Student not found" });
+        }
 
-        if (session.payment_status === "paid") {
-            const student = await Student.findOne({
-                stripeCustomerId: session.customer,
-            });
-            if (student) {
-                student.isSubscribed = true;
-                student.subscriptionType = "monthly";
-                student.subscriptionStart = new Date();
-                student.subscriptionEnd = new Date(
-                    new Date().setMonth(new Date().getMonth() + 1)
-                );
-                student.subscriptionId = session.subscription;
-                await student.save();
-            }
-            return res.json({ success: true, session });
-        } else {
+        const session = await stripe.checkout.sessions.retrieve(sessionId);
+        if (session.payment_status !== "paid") {
             return res.json({ success: false, message: "Payment not completed" });
         }
+
+        // Update subscription status in database
+        if (!student.isSubscribed) {
+            student.isSubscribed = true;
+            student.subscriptionType = "monthly";
+            student.subscriptionStart = new Date();
+            student.subscriptionEnd = new Date(
+                new Date().setMonth(new Date().getMonth() + 1)
+            );
+            student.subscriptionId = session.subscription;
+            await student.save();
+        }
+
+        return res.json({
+            success: true,
+            data: {
+                id: student.userId,
+                userId: student.userId,
+                email: student.email,
+                name: student.name,
+                _id: student._id,
+                isSubscribed: student.isSubscribed,
+                role: "student",
+            },
+        });
     } catch (err) {
         console.error("Error verifying session:", err);
         res.status(500).json({ success: false, message: "Internal server error" });

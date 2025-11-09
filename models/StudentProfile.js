@@ -1,9 +1,11 @@
 import mongoose from "mongoose";
-const StudentProfile = new mongoose.Schema(
+
+const studentSchema = new mongoose.Schema(
   {
+    
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "users",
+      ref: "users", 
       required: true,
       unique: true,
     },
@@ -36,7 +38,6 @@ const StudentProfile = new mongoose.Schema(
       type: String,
       default: "",
     },
-
     educationLevel: {
       type: String,
       required: true,
@@ -49,19 +50,16 @@ const StudentProfile = new mongoose.Schema(
         "Self-Taught",
       ],
     },
-
     selectedCategory: {
       type: String,
       required: true,
       trim: true,
     },
-
     selectedStack: {
       type: String,
       required: true,
       trim: true,
     },
-
     isSubscribed: {
       type: Boolean,
       default: false,
@@ -87,8 +85,66 @@ const StudentProfile = new mongoose.Schema(
       type: String,
       default: null,
     },
+
+    // ===== Request Fields =====
+    category: {
+      type: String,
+      trim: true,
+    },
+    status: {
+      type: String,
+      enum: ["pending", "accepted", "resolved"],
+      default: "pending",
+    },
+    stack: {
+      type: String,
+      trim: true,
+    },
+    assignedMentor: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Mentor",
+      default: null,
+    },
+    notes: {
+      type: String,
+      trim: true,
+    },
+    replies: [
+      {
+        mentor: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Mentor",
+          required: true,
+        },
+        text: {
+          type: String,
+          required: true,
+          trim: true,
+        },
+        time: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
+    requestedAt: {
+      type: Date,
+      default: Date.now,
+      immutable: true,
+    },
+    updatedAt: {
+      type: Date,
+      default: Date.now,
+    },
   },
   { timestamps: true }
 );
 
-export default mongoose.model("students", StudentProfile);
+// Update updatedAt before save
+studentSchema.pre("save", function (next) {
+  this.updatedAt = Date.now();
+  next();
+});
+
+const Student = mongoose.model("Student", studentSchema);
+export default Student;
