@@ -37,6 +37,12 @@ export const register = async (req, res) => {
     if (!["mentor", "student", "admin"].includes(role)) {
       return res.status(400).json({ message: "Invalid role" });
     }
+
+    // Clean up expired temp users before checking for existing users
+    await TempUser.deleteMany({
+      otpExpires: { $lt: Date.now() - 24 * 60 * 60 * 1000 },
+    });
+
     const existingUser = await User.findOne({ email });
     const existingTempUser = await TempUser.findOne({ email });
     if (existingUser || existingTempUser) {
@@ -109,6 +115,11 @@ export const verifyOtp = async (req, res) => {
     // Delete temporary user
     await TempUser.deleteOne({ _id: userId });
 
+    // Clean up expired temp users (older than 24 hours)
+    await TempUser.deleteMany({
+      otpExpires: { $lt: Date.now() - 24 * 60 * 60 * 1000 },
+    });
+
     await sendEmail({
       to: user.email,
       subject: "Welcome to SkillMentroX 🎉",
@@ -120,19 +131,19 @@ export const verifyOtp = async (req, res) => {
     const token = generateToken(user);
 
     // Set HTTP-only cookies
-    res.cookie('token', token, {
+    res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
-      domain: process.env.NODE_ENV === 'production' ? undefined : 'localhost',
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+      domain: process.env.NODE_ENV === "production" ? undefined : "localhost",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
-    res.cookie('role', user.role, {
+    res.cookie("role", user.role, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
-      domain: process.env.NODE_ENV === 'production' ? undefined : 'localhost',
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+      domain: process.env.NODE_ENV === "production" ? undefined : "localhost",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
     res.json({
@@ -215,19 +226,19 @@ export const login = async (req, res) => {
     const token = generateToken(user);
 
     // Set HTTP-only cookies
-    res.cookie('token', token, {
+    res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
-      domain: process.env.NODE_ENV === 'production' ? undefined : 'localhost',
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+      domain: process.env.NODE_ENV === "production" ? undefined : "localhost",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
-    res.cookie('role', user.role, {
+    res.cookie("role", user.role, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
-      domain: process.env.NODE_ENV === 'production' ? undefined : 'localhost',
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+      domain: process.env.NODE_ENV === "production" ? undefined : "localhost",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
     res.json({
@@ -330,7 +341,9 @@ export const resetPassword = async (req, res) => {
 export const getUserById = async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await User.findById(id).select("firstName lastName email role");
+    const user = await User.findById(id).select(
+      "firstName lastName email role"
+    );
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -347,4 +360,3 @@ export const getUserById = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
