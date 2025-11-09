@@ -2,10 +2,9 @@ import mongoose from "mongoose";
 
 const studentSchema = new mongoose.Schema(
   {
-    
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "users", 
+      ref: "users",
       required: true,
       unique: true,
     },
@@ -19,7 +18,6 @@ const studentSchema = new mongoose.Schema(
     email: {
       type: String,
       required: true,
-      unique: true,
       lowercase: true,
       match: [/.+\@.+\..+/, "Please enter a valid email"],
     },
