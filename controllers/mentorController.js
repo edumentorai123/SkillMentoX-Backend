@@ -258,3 +258,25 @@ export const getMentorProfile = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
+export const getMentorProfileById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ success: false, message: "Mentor ID is required" });
+    }
+
+    const mentor = await Mentor.findOne({ userId: id });
+
+    if (!mentor) {
+      return res.status(404).json({ success: false, message: "Mentor profile not found" });
+    }
+
+    res.status(200).json({ success: true, data: mentor });
+  } catch (err) {
+    console.error("Error fetching mentor profile:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+

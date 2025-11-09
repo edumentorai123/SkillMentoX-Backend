@@ -1,4 +1,5 @@
 import StudentProfile from "../models/StudentProfile.js";
+import User from "../models/User.js";
 import mongoose from "mongoose";
 
 export const createProfile = async (req, res) => {
@@ -86,20 +87,22 @@ export const createRequest = async (req, res) => {
           return res.status(404).json({ message: "Student not found" });
       }
 
-      const request = new StudentRequest({student: studentId,
-          category,
-          stack,
-          status: "pending",
-      });
+      const request = await StudentProfile.findOneAndUpdate(
+          { userId: studentId },
+          { category, stack, status: "pending" },
+          { new: true, runValidators: true }
+      );
 
-      await request.save();
+      if (!request) {
+          return res.status(404).json({ message: "Profile not found. Please create profile first." });
+      }
 
       res.status(201).json({ message: "Request created", request });
   } catch (err) {
       console.error("Error creating request:", err);
       res.status(500).json({
           message: "Internal server error",
-          error: err.message,   // 👈 show error in response
+          error: err.message,
       });
   }
 };
