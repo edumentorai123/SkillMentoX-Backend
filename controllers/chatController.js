@@ -1,4 +1,4 @@
-import { chatWithGemini } from "../config/gemini.js";
+import { chatWithGroq } from "../config/groq.js";
 
 export const handleChat = async (req, res) => {
     try {
@@ -24,8 +24,8 @@ export const handleChat = async (req, res) => {
             ...messages,
             { role: "user", content: message.trim() },
         ];
-    const reply = await chatWithGemini(chatMessages);
-    return res.status(200).json({ reply });
+        const reply = await chatWithGroq(chatMessages);
+        return res.status(200).json({ reply });
     } catch (err) {
         console.error("Chat API Error:", err.message);
         return res.status(200).json({
