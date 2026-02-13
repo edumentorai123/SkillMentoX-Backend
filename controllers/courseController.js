@@ -1,0 +1,53 @@
+import CourseModel from '../models/course.js';
+import StudentProfile from '../models/StudentProfile.js';
+
+export const getCourses = async (req, res) => {
+    try {
+        const profile = await StudentProfile.findOne({ userId: req.user.id });
+
+        if (!profile) {
+            return res.status(404).json({ success: false, message: "Student profile not found" });
+        }
+
+
+        
+        const allCourses = await CourseModel.find({});
+        
+
+        const filteredCourses = allCourses.filter(course => 
+            course.stack && profile.selectedStack.toLowerCase().includes(course.stack.toLowerCase())
+        );
+
+        console.log(`Matching courses for user stack '${profile.selectedStack}': Found ${filteredCourses.length}`);
+
+        res.status(200).json({ success: true, data: filteredCourses });
+    } catch (error) {
+        console.error("Error fetching courses:", error);
+
+        res.status(500).json({
+            success: false,
+            message: "Error fetching courses",
+            error: error.message
+        });
+    }
+};
+
+export const getCourseById = async (req, res) => {
+    try {
+
+        const course = await CourseModel.findById(req.params.id);
+
+        if (!course) {
+            return res.status(404).json({ success: false, message: "Course not found" });
+        }
+
+        res.status(200).json({ success: true, data: course });
+    } catch (error) {
+        console.error("Error fetching course:", error);
+        res.status(500).json({
+            success: false,
+            message: "Error fetching course",
+            error: error.message
+        });
+    }
+};
