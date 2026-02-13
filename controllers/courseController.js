@@ -9,14 +9,17 @@ export const getCourses = async (req, res) => {
             return res.status(404).json({ success: false, message: "Student profile not found" });
         }
 
-        const allCourses = CourseModel.getAllCourses();
-
-        const filteredCourses = allCourses.filter(course =>
-            course.stack.toLowerCase().includes(profile.selectedStack.toLowerCase())
+        // Fetch all courses using standard Mongoose method
+        const allCourses = await CourseModel.find({});
+        
+        // Filter courses where the user's selected stack includes the course's stack tag
+        const filteredCourses = allCourses.filter(course => 
+            course.stack && profile.selectedStack.toLowerCase().includes(course.stack.toLowerCase())
         );
 
         res.status(200).json({ success: true, data: filteredCourses });
     } catch (error) {
+        console.error("Error fetching courses process:", error);
         res.status(500).json({
             success: false,
             message: "Error fetching courses",
@@ -25,9 +28,10 @@ export const getCourses = async (req, res) => {
     }
 };
 
-export const getCourseById = (req, res) => {
+export const getCourseById = async (req, res) => {
     try {
-        const course = CourseModel.getCourseById(req.params.id);
+        // Use findById for single document retrieval
+        const course = await CourseModel.findById(req.params.id);
 
         if (!course) {
             return res.status(404).json({ success: false, message: "Course not found" });
@@ -35,6 +39,7 @@ export const getCourseById = (req, res) => {
 
         res.status(200).json({ success: true, data: course });
     } catch (error) {
+        console.error("Error fetching course:", error);
         res.status(500).json({
             success: false,
             message: "Error fetching course",
