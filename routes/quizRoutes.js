@@ -5,6 +5,7 @@ import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
+
 router.get("/", getQuizzes);
 router.post("/seed", seedQuizzes);
 router.post("/complete", protect, completeQuiz);
