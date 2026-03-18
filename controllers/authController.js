@@ -250,7 +250,9 @@ export const login = async (req, res) => {
         firstName: user.firstName,
         lastName: user.lastName,
         role: user.role,
+        isPremium: user.isPremium || false,
       },
+      isPremium: user.isPremium || false,
     });
   } catch (err) {
     console.error(err);

@@ -1,4 +1,5 @@
 import Student from "../models/StudentProfile.js";
+import User from "../models/User.js";
 import stripe from "../utils/stripe.js";
 
 export const createCheckoutSession = async (req, res) => {
@@ -85,6 +86,15 @@ export const stripeWebhook = async (req, res) => {
                     );
                     student.subscriptionId = session.subscription;
                     await student.save();
+
+                    // Sync to User model
+                    await User.findByIdAndUpdate(student.userId, { 
+                        isPremium: true,
+                        stripeCustomerId: session.customer,
+                        subscriptionId: session.subscription,
+                        subscriptionStatus: "active",
+                        subscriptionEnd: student.subscriptionEnd
+                    });
                 }
                 break;
             }
@@ -100,6 +110,12 @@ export const stripeWebhook = async (req, res) => {
                     student.subscriptionEnd = null;
                     student.subscriptionId = null;
                     await student.save();
+
+                    // Sync to User model
+                    await User.findByIdAndUpdate(student.userId, { 
+                        isPremium: false,
+                        subscriptionStatus: "canceled"
+                    });
                 }
                 break;
             }
@@ -142,6 +158,15 @@ export const verifySession = async (req, res) => {
             );
             student.subscriptionId = session.subscription;
             await student.save();
+
+            // Sync to User model
+            await User.findByIdAndUpdate(userId, { 
+                isPremium: true,
+                stripeCustomerId: student.stripeCustomerId || session.customer,
+                subscriptionId: session.subscription,
+                subscriptionStatus: "active",
+                subscriptionEnd: student.subscriptionEnd
+            });
         }
 
         return res.json({
