@@ -87,128 +87,11 @@ const createEmailTemplate = (content, title = "SkillMentorX") => {
           line-height: 1.3;
         }
         
-        .content h2 {
-          color: #2d3748;
-          font-size: 24px;
-          margin: 35px 0 20px 0;
-          font-weight: 600;
-        }
-        
         .content p {
           color: #4a5568;
           font-size: 18px;
           margin-bottom: 20px;
           line-height: 1.8;
-        }
-        
-        .highlight-box {
-          background: linear-gradient(135deg, #bee3f8 0%, #e9d8fd 100%);
-          padding: 35px;
-          border-radius: 12px;
-          margin: 35px 0;
-          text-align: center;
-          border-left: 5px solid #4299e1;
-        }
-        
-        .highlight-box h3 {
-          color: #2d3748;
-          font-size: 22px;
-          margin-bottom: 15px;
-          font-weight: 600;
-        }
-        
-        .highlight-box p {
-          color: #4a5568;
-          font-size: 16px;
-          margin: 0;
-        }
-        
-        .code-block {
-          background: #f7fafc;
-          color: #2d3748;
-          padding: 25px;
-          border-radius: 8px;
-          font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
-          font-size: 15px;
-          margin: 30px 0;
-          border: 1px solid #e2e8f0;
-          border-left: 4px solid #4299e1;
-          overflow-x: auto;
-        }
-        
-        .btn {
-          display: inline-block;
-          background: #4299e1;
-          color: #ffffff;
-          padding: 18px 36px;
-          text-decoration: none;
-          border-radius: 8px;
-          font-weight: 600;
-          margin: 30px 0;
-          font-size: 16px;
-          box-shadow: 0 4px 14px rgba(66, 153, 225, 0.3);
-          transition: all 0.3s ease;
-        }
-        
-        .btn:hover {
-          background: #3182ce;
-          transform: translateY(-2px);
-          box-shadow: 0 8px 25px rgba(66, 153, 225, 0.4);
-        }
-        
-        .skills-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-          gap: 20px;
-          margin: 35px 0;
-        }
-        
-        .skill-tag {
-          background: #ffffff;
-          color: #4a5568;
-          padding: 15px 20px;
-          border-radius: 8px;
-          text-align: center;
-          font-size: 15px;
-          font-weight: 500;
-          border: 2px solid #e2e8f0;
-          transition: all 0.3s ease;
-        }
-        
-        .skill-tag:hover {
-          border-color: #4299e1;
-          background: #ebf8ff;
-          color: #2b6cb0;
-          transform: translateY(-3px);
-          box-shadow: 0 8px 25px rgba(66, 153, 225, 0.15);
-        }
-        
-        .stats-section {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 25px;
-          margin: 40px 0;
-          text-align: center;
-        }
-        
-        .stat-item {
-          padding: 20px;
-          background: #f7fafc;
-          border-radius: 8px;
-          border-top: 3px solid #4299e1;
-        }
-        
-        .stat-number {
-          font-size: 28px;
-          font-weight: 700;
-          color: #4299e1;
-          margin-bottom: 8px;
-        }
-        
-        .stat-label {
-          font-size: 14px;
-          color: #718096;
-          font-weight: 500;
         }
         
         .footer {
@@ -255,46 +138,6 @@ const createEmailTemplate = (content, title = "SkillMentorX") => {
           transform: translateY(-2px);
         }
         
-        .divider {
-          height: 1px;
-          background: #e2e8f0;
-          margin: 35px 0;
-          border: none;
-        }
-        
-        .feature-list {
-          list-style: none;
-          margin: 25px 0;
-        }
-        
-        .feature-list li {
-          padding: 12px 0;
-          padding-left: 30px;
-          position: relative;
-          color: #4a5568;
-          font-size: 16px;
-        }
-        
-        .feature-list li::before {
-          content: '✓';
-          position: absolute;
-          left: 0;
-          color: #48bb78;
-          font-weight: bold;
-          font-size: 18px;
-        }
-        
-        .quote-box {
-          border-left: 4px solid #4299e1;
-          padding: 25px 30px;
-          margin: 30px 0;
-          background: #f7fafc;
-          border-radius: 0 8px 8px 0;
-          font-style: italic;
-          color: #4a5568;
-          font-size: 18px;
-        }
-        
         @media (max-width: 640px) {
           .email-container {
             margin: 15px;
@@ -303,25 +146,6 @@ const createEmailTemplate = (content, title = "SkillMentorX") => {
           
           .header, .content, .footer {
             padding: 30px 25px;
-          }
-          
-          .content h1 {
-            font-size: 28px;
-          }
-          
-          .skills-grid {
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 15px;
-          }
-          
-          .social-links {
-            flex-wrap: wrap;
-            gap: 15px;
-          }
-          
-          .stats-section {
-            grid-template-columns: 1fr;
-            gap: 15px;
           }
         }
       </style>
@@ -346,7 +170,6 @@ const createEmailTemplate = (content, title = "SkillMentorX") => {
             <a href="#">Community</a>
             <a href="#">Support</a>
           </div>
-          <div class="divider"></div>
           <p style="font-size: 13px; color: #a0aec0;">
             © 2024 SkillMentorX. Empowering developers worldwide.
           </p>
@@ -366,7 +189,9 @@ export const sendEmail = async ({ to, subject, html }) => {
       throw new Error("Email service not configured. Please add BREVO_API_KEY to Render.");
     }
 
-    console.log(`Attempting to send email via Brevo to: ${to}`);
+    const maskedKey = brevoKey.substring(0, 5) + "..." + brevoKey.substring(brevoKey.length - 5);
+    console.log(`Diagnostic: Sending via Brevo (Key: ${maskedKey})`);
+
     const styledHtml = createEmailTemplate(html, subject);
 
     const response = await fetch(BREVO_API_URL, {
