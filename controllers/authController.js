@@ -373,3 +373,32 @@ export const getUserById = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+export const testEmailTransport = async (req, res) => {
+  try {
+    const user = process.env.EMAIL_USER?.replace(/^["']|["']$/g, "");
+    const pass = process.env.EMAIL_PASS?.replace(/^["']|["']$/g, "");
+    
+    console.log(`Diagnostic: Testing email for user: ${user}`);
+    
+    const info = await sendEmail({
+      to: user,
+      subject: "Diagnostic - SkillMentoX-Backend",
+      html: `<h2>Diagnostic Test</h2><p>This is a test email from SkillMentoX.</p><p>Environment User: <b>${user}</b></p>`
+    });
+    
+    res.status(200).json({ 
+      message: "Test email sent succesfully! Please check your inbox (edumentorai123@gmail.com).",
+      info: info
+    });
+  } catch (error) {
+    console.error("Diagnostic error:", error);
+    res.status(500).json({ 
+      message: "Test email failed! Here is the error info:",
+      error: error.message,
+      code: error.code,
+      response: error.response,
+      command: error.command
+    });
+  }
+};

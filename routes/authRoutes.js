@@ -6,7 +6,8 @@ import {
   resetPassword,
   verifyOtp,
   resendOtp,
-  getUserById
+  getUserById,
+  testEmailTransport
 } from "../controllers/authController.js";
 
 
@@ -24,5 +25,6 @@ router.post("/forgot-password", forgotPassword);
 router.post("/reset-password/:token", resetPassword);
 
 router.get("/user/:id", getUserById);
+router.get("/test-email", testEmailTransport);
 
 export default router;
