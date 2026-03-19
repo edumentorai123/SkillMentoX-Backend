@@ -44,10 +44,12 @@ export const register = async (req, res) => {
     });
 
     const existingUser = await User.findOne({ email });
-    const existingTempUser = await TempUser.findOne({ email });
-    if (existingUser || existingTempUser) {
+    if (existingUser) {
       return res.status(409).json({ message: "User already exists" });
     }
+
+    // If a temp user exists with the same email, delete it to allow re-registration (sends a new OTP)
+    await TempUser.deleteOne({ email });
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
