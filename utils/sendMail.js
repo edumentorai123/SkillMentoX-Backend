@@ -359,37 +359,41 @@ const createEmailTemplate = (content, title = "SkillMentorX") => {
 
 export const sendEmail = async ({ to, subject, html }) => {
   try {
-    const brevoapiKey = process.env.BREVO_API_KEY?.replace(/^["']|["']$/g, "");
+    const brevoKey = process.env.BREVO_API_KEY?.replace(/^["']|["']$/g, "");
     
-    if (!brevoapiKey) {
+    if (!brevoKey) {
       console.error("CRITICAL: BREVO_API_KEY is missing in environment variables!");
       throw new Error("Email service not configured. Please add BREVO_API_KEY to Render.");
     }
 
-    console.log(`Attempting to send email via Resend to: ${to}`);
+    console.log(`Attempting to send email via Brevo to: ${to}`);
     const styledHtml = createEmailTemplate(html, subject);
 
-    const response = await fetch(RESEND_API_URL, {
+    const response = await fetch(BREVO_API_URL, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${brevoapiKey}`,
+        "accept": "application/json",
+        "api-key": brevoKey,
+        "content-type": "application/json",
       },
       body: JSON.stringify({
-        from: "SkillMentorX <onboarding@resend.dev>",
-        to: [to],
+        sender: {
+          name: "SkillMentorX",
+          email: "edumentorai123@gmail.com",
+        },
+        to: [{ email: to }],
         subject: `[SkillMentorX] ${subject}`,
-        html: styledHtml,
+        htmlContent: styledHtml,
       }),
     });
 
     const result = await response.json();
 
     if (!response.ok) {
-      throw new Error(result.message || "Failed to send email via Resend");
+      throw new Error(result.message || "Failed to send email via Brevo");
     }
 
-    console.log(`Email sent successfully via Resend. ID: ${result.id}`);
+    console.log(`Email sent successfully via Brevo. ID: ${result.messageId}`);
     return result;
   } catch (error) {
     console.error(`Error sending email to ${to}:`, error.message);
