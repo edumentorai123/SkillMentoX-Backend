@@ -26,6 +26,7 @@ const userSchema = new mongoose.Schema({
   subscriptionId: { type: String },       
   subscriptionStatus: { type: String },   
   subscriptionEnd: { type: Date },       
+  avatar: { type: String, default: "" },
 });
 
 // Virtual fullName field

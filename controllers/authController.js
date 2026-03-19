@@ -166,6 +166,7 @@ export const verifyOtp = async (req, res) => {
         firstName: user.firstName,
         lastName: user.lastName,
         role: user.role,
+        avatar: user.avatar || "",
       },
     });
   } catch (err) {
@@ -262,6 +263,7 @@ export const login = async (req, res) => {
         lastName: user.lastName,
         role: user.role,
         isPremium: user.isPremium || false,
+        avatar: user.avatar || "",
       },
       isPremium: user.isPremium || false,
     });

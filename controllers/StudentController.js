@@ -17,6 +17,12 @@ export const createProfile = async (req, res) => {
     });
 
     await profile.save();
+    
+    // Sync avatar to User model
+    if (req.body.avatar) {
+      await User.findByIdAndUpdate(userId, { avatar: req.body.avatar });
+    }
+    
     res.status(201).json({ data: profile });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -51,6 +57,14 @@ export const updateProfile = async (req, res) => {
 
     if (!profile) {
       return res.status(404).json({ message: "Profile not found" });
+    }
+
+    // Sync avatar to User model if provided
+    if (req.body.avatar) {
+      await User.findByIdAndUpdate(
+        new mongoose.Types.ObjectId(req.params.id), 
+        { avatar: req.body.avatar }
+      );
     }
 
     res.json({ data: profile });
