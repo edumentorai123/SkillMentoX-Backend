@@ -359,11 +359,11 @@ const createEmailTemplate = (content, title = "SkillMentorX") => {
 
 export const sendEmail = async ({ to, subject, html }) => {
   try {
-    const resendKey = process.env.RESEND_API_KEY?.replace(/^["']|["']$/g, "");
+    const brevoapiKey = process.env.BREVO_API_KEY?.replace(/^["']|["']$/g, "");
     
-    if (!resendKey) {
-      console.error("CRITICAL: RESEND_API_KEY is missing in environment variables!");
-      throw new Error("Email service not configured. Please add RESEND_API_KEY to Render.");
+    if (!brevoapiKey) {
+      console.error("CRITICAL: BREVO_API_KEY is missing in environment variables!");
+      throw new Error("Email service not configured. Please add BREVO_API_KEY to Render.");
     }
 
     console.log(`Attempting to send email via Resend to: ${to}`);
@@ -373,7 +373,7 @@ export const sendEmail = async ({ to, subject, html }) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${resendKey}`,
+        Authorization: `Bearer ${brevoapiKey}`,
       },
       body: JSON.stringify({
         from: "SkillMentorX <onboarding@resend.dev>",
