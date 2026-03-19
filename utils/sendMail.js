@@ -1,4 +1,4 @@
-const RESEND_API_URL = "https://api.resend.com/emails";
+const BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
 
 const createEmailTemplate = (content, title = "SkillMentorX") => {
   return `
@@ -339,7 +339,7 @@ const createEmailTemplate = (content, title = "SkillMentorX") => {
         
         <div class="footer">
           <div class="footer-logo">SkillMentorX</div>
-          <p>Building tomorrow's developers today</p>
+          <p>Created by skillmentorx</p>
           <div class="social-links">
             <a href="#">Learn</a>
             <a href="#">Practice</a>
