@@ -292,15 +292,28 @@ export const forgotPassword = async (req, res) => {
     user.resetPasswordExpire = Date.now() + 1000 * 60 * 60;
     await user.save();
 
-    const resetUrl = `${process.env.FRONTEND_URL}/resetPassword/${resetToken}`;
-    const html = `
-      <p>You requested a password reset</p>
-      <p>Click here to reset your password: <a href="${resetUrl}">${resetUrl}</a></p>
-      <p>If you didn't request this, ignore this email.</p>
+    const frontendUrl = process.env.FRONTEND_URL?.replace(/\/$/, "");
+    const resetUrl = `${frontendUrl}/resetPassword/${resetToken}`;
+    
+    const htmlContent = `
+      <h1>Password Reset Request</h1>
+      <p>We received a request to reset your password for your SkillMentorX account. No changes have been made yet.</p>
+      <div class="highlight-box">
+        <h3>Reset your password</h3>
+        <p>Click the button below to choose a new password. This link is valid for 60 minutes.</p>
+        <a href="${resetUrl}" class="btn">Reset Password</a>
+      </div>
+      <p>If the button doesn't work, you can copy and paste this link into your browser:</p>
+      <div class="code-block">${resetUrl}</div>
+      <p>If you did not request this, please ignore this email and your password will remain unchanged.</p>
     `;
 
     try {
-      await sendEmail({ to: user.email, subject: "Password Reset", html });
+      await sendEmail({
+        to: user.email,
+        subject: "Password Reset Request",
+        html: htmlContent,
+      });
       res.json({ message: "Reset link sent to email" });
     } catch (emailErr) {
       user.resetPasswordToken = undefined;
