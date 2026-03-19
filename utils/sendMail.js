@@ -376,7 +376,7 @@ export const sendEmail = async ({ to, subject, html }) => {
         Authorization: `Bearer ${resendKey}`,
       },
       body: JSON.stringify({
-        from: "SkillMentorX <onboarding@resend.dev>", // Default Resend test sender
+        from: "SkillMentorX <onboarding@resend.dev>",
         to: [to],
         subject: `[SkillMentorX] ${subject}`,
         html: styledHtml,
