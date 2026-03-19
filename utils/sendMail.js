@@ -1,17 +1,4 @@
-import dotenv from "dotenv";
-dotenv.config();
-import nodemailer from "nodemailer";
-
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER?.replace(/^["']|["']$/g, ""),
-    pass: process.env.EMAIL_PASS?.replace(/^["']|["']$/g, ""),
-  },
-  connectionTimeout: 10000,
-  greetingTimeout: 10000,
-  socketTimeout: 15000,
-});
+const RESEND_API_URL = "https://api.resend.com/emails";
 
 const createEmailTemplate = (content, title = "SkillMentorX") => {
   return `
@@ -372,21 +359,40 @@ const createEmailTemplate = (content, title = "SkillMentorX") => {
 
 export const sendEmail = async ({ to, subject, html }) => {
   try {
-    console.log(`Attempting to send email to: ${to} with subject: ${subject}`);
-    // Wrap the content in SkillMentorX template
+    const resendKey = process.env.RESEND_API_KEY?.replace(/^["']|["']$/g, "");
+    
+    if (!resendKey) {
+      console.error("CRITICAL: RESEND_API_KEY is missing in environment variables!");
+      throw new Error("Email service not configured. Please add RESEND_API_KEY to Render.");
+    }
+
+    console.log(`Attempting to send email via Resend to: ${to}`);
     const styledHtml = createEmailTemplate(html, subject);
 
-    const info = await transporter.sendMail({
-      from: `SkillMentorX <${process.env.EMAIL_USER}>`,
-      to,
-      subject: `[SkillMentorX] ${subject}`,
-      html: styledHtml,
+    const response = await fetch(RESEND_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${resendKey}`,
+      },
+      body: JSON.stringify({
+        from: "SkillMentorX <onboarding@resend.dev>", // Default Resend test sender
+        to: [to],
+        subject: `[SkillMentorX] ${subject}`,
+        html: styledHtml,
+      }),
     });
 
-    console.log(`Email sent successfully: ${info.messageId}`);
-    return info;
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || "Failed to send email via Resend");
+    }
+
+    console.log(`Email sent successfully via Resend. ID: ${result.id}`);
+    return result;
   } catch (error) {
-    console.error(`Error sending email to ${to}:`, error);
-    throw error; // Let the caller handle it
+    console.error(`Error sending email to ${to}:`, error.message);
+    throw error;
   }
 };
