@@ -37,7 +37,7 @@ export const register = async (req, res) => {
     if (!["mentor", "student", "admin"].includes(role)) {
       return res.status(400).json({ message: "Invalid role" });
     }
-
+    console.log(`Registration attempt for email: ${email}`);
     // Clean up expired temp users before checking for existing users
     await TempUser.deleteMany({
       otpExpires: { $lt: Date.now() - 24 * 60 * 60 * 1000 },
@@ -64,14 +64,23 @@ export const register = async (req, res) => {
       otpCode: crypto.createHash("sha256").update(otp).digest("hex"),
       otpExpires: Date.now() + 10 * 60 * 1000,
     });
+    console.log(`Creating TempUser for: ${email}`);
     await tempUser.save();
 
-    await sendEmail({
-      to: email,
-      subject: "Verify Your Email - OTP",
-      html: `<p>Your OTP code is: <b>${otp}</b>. It expires in 10 minutes.</p>
-              <p>You are registering as a <b>${role}</b>.</p>`,
-    });
+    console.log(`Sending OTP email to: ${email}`);
+    try {
+      await sendEmail({
+        to: email,
+        subject: "Verify Your Email - OTP",
+        html: `<p>Your OTP code is: <b>${otp}</b>. It expires in 10 minutes.</p>
+                <p>You are registering as a <b>${role}</b>.</p>`,
+      });
+      console.log(`OTP email sent to: ${email}`);
+    } catch (emailError) {
+      console.error(`Failed to send email to ${email}:`, emailError);
+      // Even if email fails, we should still return an error so the UI stops "Sending..."
+      return res.status(500).json({ message: "Verification email could not be sent. Please check your email address or try again later." });
+    }
 
     res.status(201).json({
       message: "OTP sent to your email. Please verify.",

@@ -5,10 +5,16 @@ import nodemailer from "nodemailer";
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
   port: Number(process.env.EMAIL_PORT || 587),
-  secure: false,
+  secure: false, // true for 465, false for other ports
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
+  },
+  connectionTimeout: 10000, // 10 seconds timeout
+  greetingTimeout: 10000,
+  socketTimeout: 15000,
+  tls: {
+    rejectUnauthorized: false, // Helps with some network environments
   },
 });
 
@@ -370,15 +376,22 @@ const createEmailTemplate = (content, title = "SkillMentorX") => {
 };
 
 export const sendEmail = async ({ to, subject, html }) => {
-  // Wrap the content in SkillMentorX template
-  const styledHtml = createEmailTemplate(html, subject);
+  try {
+    console.log(`Attempting to send email to: ${to} with subject: ${subject}`);
+    // Wrap the content in SkillMentorX template
+    const styledHtml = createEmailTemplate(html, subject);
 
-  const info = await transporter.sendMail({
-    from: `SkillMentorX <${process.env.EMAIL_USER}>`,
-    to,
-    subject: `[SkillMentorX] ${subject}`,
-    html: styledHtml,
-  });
-  
-  return info;
+    const info = await transporter.sendMail({
+      from: `SkillMentorX <${process.env.EMAIL_USER}>`,
+      to,
+      subject: `[SkillMentorX] ${subject}`,
+      html: styledHtml,
+    });
+
+    console.log(`Email sent successfully: ${info.messageId}`);
+    return info;
+  } catch (error) {
+    console.error(`Error sending email to ${to}:`, error);
+    throw error; // Let the caller handle it
+  }
 };
